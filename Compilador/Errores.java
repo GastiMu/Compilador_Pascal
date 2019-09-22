@@ -20,6 +20,11 @@ public class Errores {
         System.exit(0);
     }
 
+    public static void errorSemantico(String error) {
+        System.out.println("Error semantico en linea " + obtNumLinea() + ": " + error + ".");
+        System.exit(0);
+    }
+    
     public static void ejecucionExitosa() {
         System.out.println("Ejecucion exitosa.");
         System.exit(1);
