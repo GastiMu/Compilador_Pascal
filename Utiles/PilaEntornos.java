@@ -35,7 +35,7 @@ public class PilaEntornos {
         boolean exito = true;
 
         if (!esVacia()) {
-            tope = tope.getEntorno();
+            tope = tope.getInvocador();
             cantidadEntornos--;
         } else {
             exito = false;
@@ -44,9 +44,9 @@ public class PilaEntornos {
         return exito;
     }
 
-    public int obtenerTope() {
+    public Entorno obtenerTope() {
 
-        return tope.getEntorno();
+        return tope.getInvocador();
     }
 
     public boolean esVacia() {
@@ -66,14 +66,14 @@ public class PilaEntornos {
         //mientras enlace del nodo no sea null concateno los elementos
         while (aux != null) {
             cadena += aux.getNombreEntorno();
-            aux = aux.getEntorno();
+            aux = aux.getInvocador();
         }
 
         return cadena;
     }
 
     public Variable buscarAparicionVar(String nombre) {
-        Variable var;
+        Variable var = new Variable();
         Entorno aux = tope;
         int i = 0;
         boolean salir = false;
