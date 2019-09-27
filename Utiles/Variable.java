@@ -12,9 +12,8 @@ public Variable(){
 	
 }
 
-public Variable(String nombre, String tipo){
+public Variable(String nombre){
 	this.nombre = nombre;
-	this.tipo = tipo;
 	
 }
 

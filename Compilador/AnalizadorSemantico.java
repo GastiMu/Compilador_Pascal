@@ -5,10 +5,37 @@
  */
 package Compilador;
 
+import Utiles.Entorno;
+import Utiles.Variable;
+
 /**
  *
  * @author Gaston
  */
 public class AnalizadorSemantico {
-    
+
+    public static void seteadorTipos(String tipo, Entorno entorno) {
+        int i=0;
+        int indiceActual = entorno.getIndiceTabla();
+        if (indiceActual == 0) {
+
+            for (i = 0 ; i < entorno.getTablaSimbolos().size(); i++) {
+                entorno.getTablaSimbolos().get(i).setTipo(tipo);
+            }
+            entorno.setIndiceTabla(i+1); //actualiza el indice de la tabla porque ya seteo tipos de datos en las variables
+        }
+        else{
+            for (i = indiceActual ; i < entorno.getTablaSimbolos().size(); i++) {
+                entorno.getTablaSimbolos().get(i).setTipo(tipo);
+            }
+            entorno.setIndiceTabla(i+1);
+        }
+    }
+
+    public static void insertarVariables(Entorno entorno, String nombreVar) {
+        Variable var = new Variable();
+        var.setNombre(nombreVar);
+        entorno.agregarVariable(nombreVar);
+    }
+
 }

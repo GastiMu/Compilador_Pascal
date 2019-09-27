@@ -9,6 +9,7 @@ public class Token {
 
     private String tipo;
     private String valor;
+    private String nombre;
 
     public Token() {
     }
@@ -16,6 +17,14 @@ public class Token {
     public Token(String tipo, String valor) {
         this.tipo = tipo;
         this.valor = valor;
+    }
+    
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nom) {
+        this.nombre = nom;
     }
 
     public String getTipo() {

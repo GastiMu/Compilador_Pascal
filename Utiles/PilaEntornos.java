@@ -75,15 +75,19 @@ public class PilaEntornos {
     public Variable buscarAparicionVar(String nombre) {
         Variable var = new Variable();
         Entorno aux = tope;
+        int indice = -1;
         int i = 0;
         boolean salir = false;
-        while (i < cantidadEntornos && !salir) {
+        while (i < cantidadEntornos && indice == -1) {
             
-          //  salir = aux.existeVar(nombre); //aca va el metodo para buscar dentro de un entorno de la clase Entorno
-            i++;
+            indice = aux.existeVariableEntorno(nombre); 
+            if(indice == -1){
+                i++;
+                aux = aux.getInvocador();
+            }
         }
-        if (salir) {
-            //   var = //aux.getVariable();
+        if (indice != -1) {
+            var = aux.obtenerVariableEntorno(indice);
         } 
         else {
                 errorSemantico("La variable no existe en el programa");

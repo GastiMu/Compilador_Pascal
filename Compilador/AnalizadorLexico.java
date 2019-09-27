@@ -63,7 +63,8 @@ public class AnalizadorLexico {
     public static Token verificar(String linea) {
         //es digito, letra o un caracter que no esta en el alfabeto de entrada
         Token token = new Token();
-        String cadena = "";
+        String auxiliar,cadena = "";
+        
         String lexema = "";
         if (Character.isDigit(linea.charAt(index))) {
             //aca deberia ver el proximo caracter, pero ya se que es un tokenNum
@@ -87,6 +88,7 @@ public class AnalizadorLexico {
                     cadena += linea.charAt(index);
                 }
                 index++;
+                auxiliar = cadena;
                 cadena = buscarPalRes(cadena);
                 //no es identificador
                 if (!cadena.equalsIgnoreCase("tokenId")) {
@@ -94,6 +96,7 @@ public class AnalizadorLexico {
                 } //es identificador
                 else {
                     token = new Token("identificador", cadena);
+                    token.setNombre(auxiliar);
                 }
             } //no comienza con digito ni letra
             else {

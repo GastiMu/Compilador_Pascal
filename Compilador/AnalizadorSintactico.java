@@ -3,6 +3,8 @@ package Compilador;
 import Utiles.Token;
 import static Compilador.Errores.errorLexico;
 import static Compilador.Errores.errorSintactico;
+import Utiles.Entorno;
+import Utiles.PilaEntornos;
 
 
 public class AnalizadorSintactico {
@@ -15,6 +17,8 @@ public class AnalizadorSintactico {
     static String[] primExpr3 = {"sum_res", "tokenNum", "tokenId", "parenAbre","true","false"};
     private final AnalizadorLexico lexico;
     private static Token preanalisis;
+    private PilaEntornos pila;
+    private static String temporal = " "; 
 
     public static void main(String[] args) {
 
@@ -24,6 +28,7 @@ public class AnalizadorSintactico {
     public AnalizadorSintactico(String archivo) {
         lexico = new AnalizadorLexico(archivo);
         preanalisis = lexico.retornarToken();
+        pila = new PilaEntornos();
     }
 
     private static boolean enPrimeros(Token t, String[] primeros) {
@@ -50,6 +55,9 @@ public class AnalizadorSintactico {
     	
             if (preanalisis.equals(t)) {
                 try {
+                    if(preanalisis.getValor().equalsIgnoreCase("tokenId")){
+                        temporal = preanalisis.getNombre();
+                    }
                     preanalisis = lexico.retornarToken();
                     if(preanalisis.getValor().equalsIgnoreCase("Fin")){
                         Errores.ejecucionExitosa();
@@ -87,26 +95,32 @@ public class AnalizadorSintactico {
         }
     }
 
-    public void tipoDato() {
-       
+    public String tipoDato() {
+        String tipoAux;
         if (preanalisis.getValor().equalsIgnoreCase("boolean")) {
             match(new Token("palabraReservada", "boolean"));
+            tipoAux = "boolean";
         } else {
             match(new Token("palabraReservada", "integer"));
+            tipoAux = "integer";
         }
+        return tipoAux;
     }
 
-    public void declaracionVariables() {
-        
+    public void declaracionVariables(Entorno entorno) {
+        String tipoAux; // va a almacenar el tipo de dato de el conjunto de variables
         match(new Token("palabraReservada", "var"));
         do {
             match(new Token("identificador", "tokenId"));
+            AnalizadorSemantico.insertarVariables(entorno, temporal);
             while (preanalisis.getValor().equalsIgnoreCase("coma")) {
                 match(new Token("opPuntuacion", "coma"));
                 match(new Token("identificador", "tokenId"));
+                AnalizadorSemantico.insertarVariables(entorno, temporal);
             }
             match(new Token("opPuntuacion", "dosPuntos"));
-            tipoDato();
+            tipoAux = tipoDato();
+            AnalizadorSemantico.seteadorTipos(tipoAux, entorno);
             match(new Token("opPuntuacion", "puntoYComa"));
         } while (preanalisis.getValor().equalsIgnoreCase("tokenId"));
         //aca si leo abajo de la declaracion de variables, una funcion o proced sin su palabra reservada lo toma como tokenId
@@ -115,11 +129,15 @@ public class AnalizadorSintactico {
     public void programaPrincipal() {
 
         match(new Token("palabraReservada", "program"));
+        Entorno principal = new Entorno();
+        pila.apilarEntorno(principal);
         match(new Token("identificador","tokenId"));
+        principal.setNombreEntorno(temporal);
+        
         match(new Token("opPuntuacion","puntoYComa"));
-
+        
         if (preanalisis.getValor().equalsIgnoreCase("var")) {
-            declaracionVariables();
+            declaracionVariables(principal);
         }
 
         while (enPrimeros(preanalisis, primSubprog)) {
@@ -149,17 +167,24 @@ public class AnalizadorSintactico {
     }
 
     public void declaracionFuncion() {
-
+        String tipoAux;
         match(new Token("palabraReservada", "function"));
+        Entorno funcion = new Entorno();
+        pila.apilarEntorno(funcion);
         match(new Token("identificador", "tokenId"));
+        funcion.setNombreEntorno(temporal);
+        AnalizadorSemantico.insertarVariables(funcion, temporal);
+        funcion.setIndiceTabla(1); //el indice de tabla comienza en 1 porque en 0 esta la variable de retorno de la funcion(y no hay que setear su tipo)
+        
         if (preanalisis.getValor().equalsIgnoreCase("parenAbre")) {
-            parametrosFormales();
+            parametrosFormales(funcion); 
         }
         match(new Token("opPuntuacion", "dosPuntos"));
-        tipoDato();
+        tipoAux = tipoDato();
+        funcion.getTablaSimbolos().get(0).setTipo(tipoAux); //setea la variable de retorno con el mismo tipo de dato que la funcion
         match(new Token("opPuntuacion", "puntoYComa"));
         if (preanalisis.getValor().equalsIgnoreCase("var")) {
-            declaracionVariables();
+            declaracionVariables(funcion);
         }
 
         while ((preanalisis.getValor().equalsIgnoreCase("function")) || (preanalisis.getValor().equalsIgnoreCase("procedure"))) {
@@ -202,26 +227,29 @@ public class AnalizadorSintactico {
         match(new Token("palabraReservada", "end"));
     }
 
-    public void parametrosFormales() {
+    public void parametrosFormales(Entorno entorno) {
         
         match(new Token("parentizacion", "parenAbre"));
-        parametroFormalValor();
+        parametroFormalValor(entorno);
         while (preanalisis.getValor().equalsIgnoreCase("tokenId")) {
             match(new Token("opPuntuacion", "puntoYComa"));
-            parametroFormalValor();
+            parametroFormalValor(entorno);
         }
         match(new Token("parentizacion", "parenCierra"));
     }
 
-    public void parametroFormalValor() {
-
+    public void parametroFormalValor(Entorno entorno) {
+        String tipoAux;
         match(new Token("identificador", "tokenId"));
+        AnalizadorSemantico.insertarVariables(entorno, temporal);
         while (preanalisis.getValor().equalsIgnoreCase("coma")) {
             match(new Token("opPuntuacion", "coma"));
             match(new Token("identificador", "tokenId"));
+            AnalizadorSemantico.insertarVariables(entorno, temporal);
         }
         match(new Token("opPuntuacion", "dosPuntos"));
-        tipoDato();
+        tipoAux = tipoDato();
+        AnalizadorSemantico.seteadorTipos(tipoAux, entorno);
 
     } // fin de parametro formal Valor
 
