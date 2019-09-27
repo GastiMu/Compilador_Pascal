@@ -2,6 +2,7 @@ package Compilador;
 
 import Utiles.Token;
 import static Compilador.Errores.errorLexico;
+import static Compilador.Errores.errorSemantico;
 import static Compilador.Errores.errorSintactico;
 import Utiles.Entorno;
 import Utiles.PilaEntornos;
@@ -201,13 +202,18 @@ public class AnalizadorSintactico {
     public void declaracionProcedimiento() {
         
         match(new Token("palabraReservada", "procedure"));
+        Entorno procedimiento = new Entorno();
+        pila.apilarEntorno(procedimiento);
         match(new Token("identificador", "tokenId"));
+        procedimiento.setNombreEntorno(temporal);
+        AnalizadorSemantico.insertarVariables(procedimiento, temporal);
+        
         if (preanalisis.getValor().equalsIgnoreCase("parenAbre")) {
-            parametrosFormales();
+            parametrosFormales(procedimiento);
         }
         match(new Token("opPuntuacion", "puntoYComa"));
         if (preanalisis.getValor().equalsIgnoreCase("var")) {
-            declaracionVariables();
+            declaracionVariables(procedimiento);
         }
         while ((preanalisis.getValor().equalsIgnoreCase("function")) || (preanalisis.getValor().equalsIgnoreCase("procedure"))) {
             if (preanalisis.getValor().equalsIgnoreCase("function")) {
@@ -225,6 +231,7 @@ public class AnalizadorSintactico {
         match(new Token("palabraReservada", "begin"));
         bloque();
         match(new Token("palabraReservada", "end"));
+        pila.desapilarEntorno();
     }
 
     public void parametrosFormales(Entorno entorno) {
@@ -294,7 +301,10 @@ public class AnalizadorSintactico {
     public void sentenciaAsignacion() {
 
         match(new Token("opAsignacion", "asignacion"));
+        
         expresion();
+        
+        //sentencia de asignacion lo resolvemos en la vuelta
     }
 
     public void expresion() {
@@ -483,7 +493,7 @@ public class AnalizadorSintactico {
         case "tokenNum" : match(new Token("constanteNumerica", "tokenNum"));
         				  ;break;
         
-        case "tokenId" :  match(new Token("identificador", "tokenId"));
+        case "tokenId" : match(new Token("identificador", "tokenId"));
         				  expresionFinalAux(); 
         				  ;break;
                 
@@ -547,6 +557,10 @@ public class AnalizadorSintactico {
         switch (preanalisis.getValor()) {
             case "tokenId":
                 match(new Token("identificador", "tokenId"));
+                if(!pila.existeVarEnPila(temporal)){
+                    errorSemantico("La variable no existe en el programa");
+                }
+                
                 absId();
                 break;
 

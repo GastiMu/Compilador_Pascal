@@ -94,5 +94,25 @@ public class PilaEntornos {
         }
         return var;
     }
+    
+    public boolean existeVarEnPila(String nombre) {
+        Entorno aux = tope;
+        int indice = -1;
+        int i = 0;
+        boolean salir = false;
+        while (i < cantidadEntornos && indice == -1) {
+            
+            indice = aux.existeVariableEntorno(nombre); 
+            if(indice == -1){
+                i++;
+                aux = aux.getInvocador();
+            }
+        }
+        if (indice != -1) {
+            salir = true;
+        }
+        return salir;
+    }
+    
 
 }
