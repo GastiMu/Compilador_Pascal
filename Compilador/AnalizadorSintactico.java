@@ -553,14 +553,16 @@ public class AnalizadorSintactico {
     }
 
     public void sentenciaSimple() {
-
+        
         switch (preanalisis.getValor()) {
             case "tokenId":
                 match(new Token("identificador", "tokenId"));
                 if(!pila.existeVarEnPila(temporal)){
                     errorSemantico("La variable no existe en el programa");
                 }
-                
+                else{ 
+                    String tipo = pila.obtenerTipoVarEnPila(temporal);  //en la variable tipo guardo el tipo de dato del tokenId
+                }
                 absId();
                 break;
 

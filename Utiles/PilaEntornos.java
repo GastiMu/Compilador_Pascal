@@ -114,5 +114,24 @@ public class PilaEntornos {
         return salir;
     }
     
+    //mismo metodo con distinto retorno para evaluar tipo de dato en expresiones
+    public String obtenerTipoVarEnPila(String nombre) {
+        Entorno aux = tope;
+        int indice = -1;
+        int i = 0;
+        String salida = "";
+        while (i < cantidadEntornos && indice == -1) {
+            
+            indice = aux.existeVariableEntorno(nombre); 
+            if(indice == -1){
+                i++;
+                aux = aux.getInvocador();
+            }
+        }
+        if (indice != -1) {
+            salida = aux.obtenerVariableEntorno(i).getTipo();
+        }
+        return salida;
+    }
 
 }
