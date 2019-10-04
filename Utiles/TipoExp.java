@@ -3,17 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package utiles;
+package Utiles;
 
 /**
  *
- * @author Gaston
+ * @author Gaston 
  */
 public class TipoExp {
     
     private String tipoDato;
     private String operacion;
-    
     private final String opCompatiblesInteger []= {"suma", "resta", "division", "multiplicacion", "asignacion"};
     private String opCompatiblesBoolean [] = {"or","and","not"};
     
@@ -51,7 +50,14 @@ public class TipoExp {
       i++;
       }
 	return salir;  
-  	}  
+  	} 
+  
+  public boolean compararAmbosLados(TipoExp expDerecha){
+	  
+	  return (this.tipoDato.equalsIgnoreCase(expDerecha.tipoDato));
+
+	  
+  }
     
     
 } 
