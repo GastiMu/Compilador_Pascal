@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package Utiles;
+package utiles;
 
 /**
  *
@@ -12,21 +12,47 @@ package Utiles;
 public class TipoExp {
     
     private String tipoDato;
-     
+    private String operacion;
+    
     private final String opCompatiblesInteger []= {"suma", "resta", "division", "multiplicacion", "asignacion"};
-    private String opCompatiblesBoolean = {asdadasd, asig};
+    private String opCompatiblesBoolean [] = {"or","and","not"};
     
-    public TipoExp(){
-        
+   
+    public TipoExp(String unTipoDato){
+    
+    	this.tipoDato=unTipoDato;
+    	
+    }	
+      
+    
+    public boolean verifCompatibilidadOperacion( String unaOperacion){
+    
+    boolean encontrado;	
+    if (this.tipoDato.equalsIgnoreCase("integer")){
+    	 encontrado=buscarOperacion(this.opCompatiblesInteger,unaOperacion);
     }
-    
-    public boolean compatibilidadOperacion(String op, TipoExp ladoIzq){
+    else {
+    	encontrado=buscarOperacion(this.opCompatiblesBoolean,unaOperacion);
+    	
+    }
+    return encontrado;
         
-        if (this.TipoDato eic (integer)
-                
-            else
-                
-            te1.compatibilidadOperacion(suma,te2)
-                    }
-te1.tipoDato -> integer
-}
+   }
+    
+    
+  private boolean buscarOperacion( String [] operadoresValidos,String unaOperacion){
+	  
+	  int i=0;
+      int l=operadoresValidos.length;
+      boolean salir=false;
+      while((i<l)&&(!salir)) {
+      	if (operadoresValidos[i].equalsIgnoreCase(unaOperacion))
+      		salir=true;
+      i++;
+      }
+	return salir;  
+  	}  
+    
+    
+} 
+    
