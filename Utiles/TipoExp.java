@@ -13,7 +13,7 @@ public class TipoExp {
     
     private String tipoDato;
     private String operacion;
-    private final String opCompatiblesInteger []= {"suma", "resta", "division", "multiplicacion", "asignacion"};
+    private final String opCompatiblesInteger []= {"suma", "resta", "division", "multiplicacion", "asignacion","menor","mayor", "menor_igual", "mayor_igual","distinto", "igual"};
     private String opCompatiblesBoolean [] = {"or","and","not"};
     
    
