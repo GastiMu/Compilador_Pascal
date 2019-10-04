@@ -14,13 +14,25 @@ public class TipoExp {
     private String tipoDato;
     private String operacion;
 
-    private final String opCompatiblesInteger[] = {"suma", "resta", "division", "multiplicacion", "asignacion"};
+    private final String opCompatiblesInteger []= {"suma", "resta", "division", "multiplicacion", "asignacion","menor","mayor", "menor_igual", "mayor_igual","distinto", "igual"};
     private String opCompatiblesBoolean[] = {"or", "and", "not"};
 
     public TipoExp(String unTipoDato) {
 
         this.tipoDato = unTipoDato;
 
+    }
+
+    public TipoExp() {
+
+    }
+
+    public String getTipoDato() {
+        return tipoDato;
+    }
+
+    public void setTipoDato(String tipoDato) {
+        this.tipoDato = tipoDato;
     }
 
     public boolean verifCompatibilidadOperacion(String unaOperacion) {
@@ -48,6 +60,12 @@ public class TipoExp {
             i++;
         }
         return salir;
+    }
+
+    public boolean compararAmbosLados(TipoExp expDerecha) {
+
+        return (this.tipoDato.equalsIgnoreCase(expDerecha.tipoDato));
+
     }
 
 }
