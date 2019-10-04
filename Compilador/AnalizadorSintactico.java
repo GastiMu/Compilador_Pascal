@@ -329,6 +329,7 @@ public class AnalizadorSintactico {
     public void expresion1Aux() {
 
         if (preanalisis.getValor().equalsIgnoreCase("and")) {
+            
             match(new Token("palabraReservada", "and"));
             expresion2();
             expresion1Aux();
@@ -397,6 +398,7 @@ public class AnalizadorSintactico {
 
     public void terminoSumRestAux() {
         if (preanalisis.getValor().equalsIgnoreCase("suma")) {
+            
             match(new Token("sum_res", "suma"));
             auxiliarSumaRest();
         }
