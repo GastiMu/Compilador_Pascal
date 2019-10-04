@@ -17,14 +17,26 @@ public class TipoExp {
     private String opCompatiblesBoolean [] = {"or","and","not"};
     
    
+    public TipoExp(){
+        
+    }
+       
     public TipoExp(String unTipoDato){
     
     	this.tipoDato=unTipoDato;
     	
-    }	
-      
+    }
     
-    public boolean verifCompatibilidadOperacion( String unaOperacion){
+      
+    public String getTipoDato() {
+		return tipoDato;
+	}
+
+	public void setTipoDato(String tipoDato) {
+		this.tipoDato = tipoDato;
+	}
+
+	public boolean verifCompatibilidadOperacion( String unaOperacion){
     
     boolean encontrado;	
     if (this.tipoDato.equalsIgnoreCase("integer")){
