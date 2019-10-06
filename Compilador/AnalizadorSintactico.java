@@ -134,6 +134,10 @@ public class AnalizadorSintactico {
             AnalizadorSemantico.seteadorTipos(tipoAux, entorno);
             match(new Token("opPuntuacion", "puntoYComa"));
         } while (preanalisis.getValor().equalsIgnoreCase("tokenId"));
+        //System.out.println(entorno.getTablaSimbolos().get(0).getNombre()+" es tipo "+entorno.getTablaSimbolos().get(0).getTipo());
+         //   System.out.println(entorno.getTablaSimbolos().get(1).getNombre()+" es tipo "+entorno.getTablaSimbolos().get(1).getTipo());
+         //   System.out.println(entorno.getTablaSimbolos().get(2).getNombre()+" es tipo "+entorno.getTablaSimbolos().get(2).getTipo());
+            
         //aca si leo abajo de la declaracion de variables, una funcion o proced sin su palabra reservada lo toma como tokenId
     }
 
@@ -180,7 +184,7 @@ public class AnalizadorSintactico {
     public void declaracionFuncion() {
         String tipoAux;
         match(new Token("palabraReservada", "function"));
-        Entorno funcion = new Entorno();
+        Entorno funcion = new Entorno(pila.obtenerTope());
         pila.apilarEntorno(funcion);
         match(new Token("identificador", "tokenId"));
         funcion.setNombreEntorno(temporal);
@@ -212,7 +216,7 @@ public class AnalizadorSintactico {
     public void declaracionProcedimiento() {
 
         match(new Token("palabraReservada", "procedure"));
-        Entorno procedimiento = new Entorno();
+        Entorno procedimiento = new Entorno(pila.obtenerTope());
         pila.apilarEntorno(procedimiento);
         match(new Token("identificador", "tokenId"));
         procedimiento.setNombreEntorno(temporal);
@@ -310,53 +314,87 @@ public class AnalizadorSintactico {
 
     public void sentenciaAsignacion(TipoExp ladoIzq) {
         boolean compatible;
+        TipoExp ladoDer = new TipoExp();
         match(new Token("opAsignacion", "asignacion"));
-
+        
+        ladoDer = expresion();
+        compatible = ladoIzq.compararAmbosLados(ladoDer);
         if (!compatible) {
-            errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
-        } else {
-            TipoExp ladoDer = expresion();
-            compatible = ladoIzq.compararAmbosLados(ladoDer);
-            if (!compatible) {
-                errorSemantico("Error, no son compatibles los tipos de dato.");
-            } else {
-                exp.setTipoDato("integer");
-            }
-
-            //sentencia de asignacion lo resolvemos en la vuelta
+            errorSemantico("Error, no son compatibles los tipos de dato.");
         }
+    }
 
     
 
     public TipoExp expresion() {
-        TipoExp td = new TipoExp();
-        expresion1(td);
-        expresionAux(td);
+        TipoExp exp = new TipoExp();
+        exp = expresion1(exp); //lo paso vacio pero se completa a la vuelta
+        exp = expresionAux(exp, exp);
+        
+        return exp;
     }
 
-    public void expresionAux(TipoExp td) {
-
+    public TipoExp expresionAux(TipoExp td, TipoExp tipoD) {
+        boolean compatible;
+        TipoExp exp = new TipoExp();
         if (preanalisis.getValor().equalsIgnoreCase("or")) {
             match(new Token("palabraReservada", "or"));
-            expresion1(td);
-            expresionAux(td);
+            compatible = td.verifCompatibilidadOperacion("or");
+
+                if (!compatible) {
+                    errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
+                } else {
+                    TipoExp ladoDer = expresion1(td);
+                    compatible = td.compararAmbosLados(ladoDer);
+                    if (!compatible) {
+                        errorSemantico("Error, no son compatibles los tipos de dato.");
+                    } else {
+                        exp.setTipoDato("boolean");
+                    }
+                    
+                    exp = expresionAux(exp, tipoD);
+                }
         }
+        else{
+            exp = tipoD;
+        }
+        return exp;
     }
 
-    public void expresion1(TipoExp td) {
+    public TipoExp expresion1(TipoExp td) {
         TipoExp tipoD;
         tipoD = expresion2(td);
-        expresion1Aux(td, tipoD);
+        tipoD = expresion1Aux(td, tipoD);
+        
+        return tipoD;
     }
 
-    public void expresion1Aux(TipoExp td) {
-
+    public TipoExp expresion1Aux(TipoExp td, TipoExp tipoD) {
+        boolean compatible;
+        TipoExp exp = new TipoExp();
         if (preanalisis.getValor().equalsIgnoreCase("and")) {
 
             match(new Token("palabraReservada", "and"));
-            expresion2(td);
-            expresion1Aux(td);
+            compatible = td.verifCompatibilidadOperacion("or");
+
+                if (!compatible) {
+                    errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
+                } else {
+                    TipoExp ladoDer = expresion2(td);
+                    compatible = td.compararAmbosLados(ladoDer);
+                    if (!compatible) {
+                        errorSemantico("Error, no son compatibles los tipos de dato.");
+                    } else {
+                        exp.setTipoDato("boolean");
+                    }
+                    
+                    exp = expresion1Aux(exp, tipoD);
+                }
         }
+        else{
+            exp = tipoD;
+        }
+        return exp;
     }
 
     public TipoExp expresion2(TipoExp td) {
@@ -399,102 +437,102 @@ public class AnalizadorSintactico {
 
             case "igual":
                 match(new Token("operador_relacional", "igual"));
-                compatible = ladoIzq.verifCompatibilidadOperacion("igual");
+                compatible = tipoD.verifCompatibilidadOperacion("igual");
 
                 if (!compatible) {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
-                    TipoExp ladoDer = auxiliarComparacion(ladoIzq);
-                    compatible = ladoIzq.compararAmbosLados(ladoDer);
+                    TipoExp ladoDer = auxiliarComparacion(tipoD);
+                    compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
                     } else {
-                        exp.setTipoDato("integer");
+                        exp.setTipoDato("boolean");
                     }
                 }
                 break;
 
             case "distinto":
                 match(new Token("operador_relacional", "distinto"));
-                compatible = ladoIzq.verifCompatibilidadOperacion("distinto");
+                compatible = tipoD.verifCompatibilidadOperacion("distinto");
 
                 if (!compatible) {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
-                    TipoExp ladoDer = auxiliarComparacion(ladoIzq);
-                    compatible = ladoIzq.compararAmbosLados(ladoDer);
+                    TipoExp ladoDer = auxiliarComparacion(tipoD);
+                    compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
                     } else {
-                        exp.setTipoDato("integer");
+                        exp.setTipoDato("boolean");
                     }
                 }
                 break;
 
             case "menor":
                 match(new Token("operador_relacional", "menor"));
-                compatible = ladoIzq.verifCompatibilidadOperacion("menor");
+                compatible = tipoD.verifCompatibilidadOperacion("menor");
 
                 if (!compatible) {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
-                    TipoExp ladoDer = auxiliarComparacion(ladoIzq);
-                    compatible = ladoIzq.compararAmbosLados(ladoDer);
+                    TipoExp ladoDer = auxiliarComparacion(tipoD);
+                    compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
                     } else {
-                        exp.setTipoDato("integer");
+                        exp.setTipoDato("boolean");
                     }
                 }
                 break;
 
             case "mayor":
                 match(new Token("operador_relacional", "mayor"));
-                compatible = ladoIzq.verifCompatibilidadOperacion("mayor");
+                compatible = tipoD.verifCompatibilidadOperacion("mayor");
 
                 if (!compatible) {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
-                    TipoExp ladoDer = auxiliarComparacion(ladoIzq);
-                    compatible = ladoIzq.compararAmbosLados(ladoDer);
+                    TipoExp ladoDer = auxiliarComparacion(tipoD);
+                    compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
                     } else {
-                        exp.setTipoDato("integer");
+                        exp.setTipoDato("boolean");
                     }
                 }
                 break;
 
             case "menor_igual":
                 match(new Token("operador_relacional", "menor_igual"));
-                compatible = ladoIzq.verifCompatibilidadOperacion("menor_igual");
+                compatible = tipoD.verifCompatibilidadOperacion("menor_igual");
 
                 if (!compatible) {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
-                    TipoExp ladoDer = auxiliarComparacion(ladoIzq);
-                    compatible = ladoIzq.compararAmbosLados(ladoDer);
+                    TipoExp ladoDer = auxiliarComparacion(tipoD);
+                    compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
                     } else {
-                        exp.setTipoDato("integer");
+                        exp.setTipoDato("boolean");
                     }
                 }
                 break;
 
             case "mayor_igual":
                 match(new Token("operador_relacional", "mayor_igual"));
-                compatible = ladoIzq.verifCompatibilidadOperacion("mayor_igual");
+                compatible = tipoD.verifCompatibilidadOperacion("mayor_igual");
 
                 if (!compatible) {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
-                    TipoExp ladoDer = auxiliarComparacion(ladoIzq);
-                    compatible = ladoIzq.compararAmbosLados(ladoDer);
+                    TipoExp ladoDer = auxiliarComparacion(tipoD);
+                    compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
                     } else {
-                        exp.setTipoDato("integer");
+                        exp.setTipoDato("boolean");
                     }
                 }
                 break;
@@ -588,13 +626,13 @@ public class AnalizadorSintactico {
         TipoExp exp = new TipoExp();
         if (preanalisis.getValor().equalsIgnoreCase("producto")) {
             match(new Token("mult_div", "producto"));
-            compatible = ladoIzq.verifCompatibilidadOperacion("producto");
+            compatible = tipoD.verifCompatibilidadOperacion("producto");
 
             if (!compatible) {
                 errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
             } else {
-                TipoExp ladoDer = auxiliarProdDiv(ladoIzq);
-                compatible = ladoIzq.compararAmbosLados(ladoDer);
+                TipoExp ladoDer = auxiliarProdDiv(tipoD);
+                compatible = tipoD.compararAmbosLados(ladoDer);
                 if (!compatible) {
                     errorSemantico("Error, no son compatibles los tipos de dato.");
                 } else {
@@ -604,13 +642,13 @@ public class AnalizadorSintactico {
         } else {
             if (preanalisis.getValor().equalsIgnoreCase("division")) {
                 match(new Token("mult_div", "division"));
-                compatible = ladoIzq.verifCompatibilidadOperacion("dvision");
+                compatible = tipoD.verifCompatibilidadOperacion("dvision");
 
                 if (!compatible) {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
-                    TipoExp ladoDer = auxiliarSumaRest(ladoIzq);
-                    compatible = ladoIzq.compararAmbosLados(ladoDer);
+                    TipoExp ladoDer = auxiliarSumaRest(tipoD);
+                    compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
                     } else {
@@ -711,9 +749,14 @@ public class AnalizadorSintactico {
 
             case "tokenId":
                 match(new Token("identificador", "tokenId"));
-
-                expresionFinalAux();
-                break;
+                if (!pila.existeVarEnPila(temporal)) {
+                    errorSemantico("La variable no existe en el programa");
+                } else {
+                    String tipo = pila.obtenerTipoVarEnPila(temporal);  //en la variable tipo guardo el tipo de dato del tokenId
+                    TipoExp ladoIzq = new TipoExp(tipo);
+                    td = ladoIzq;
+                    expresionFinalAux();
+                }break;
 
             case "true":
                 match(new Token("palabraReservada", "true"));
@@ -763,8 +806,7 @@ public class AnalizadorSintactico {
 
     public void sentencias() {
         if (enPrimeros(preanalisis, primCompartido)) {
-            TipoExp primerTD = new TipoExp();
-            sentenciaSimple(primerTD);
+            sentenciaSimple();
         } else {
             if (preanalisis.getValor().equalsIgnoreCase("begin")) {
                 cuerpoSubprograma();
@@ -774,7 +816,7 @@ public class AnalizadorSintactico {
         }
     }
 
-    public void sentenciaSimple(TipoExp td) {
+    public void sentenciaSimple() {
 
         switch (preanalisis.getValor()) {
             case "tokenId":

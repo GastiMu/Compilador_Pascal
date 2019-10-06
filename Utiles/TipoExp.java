@@ -14,8 +14,8 @@ public class TipoExp {
     private String tipoDato;
     private String operacion;
 
-    private final String opCompatiblesInteger []= {"suma", "resta", "division", "multiplicacion", "asignacion","menor","mayor", "menor_igual", "mayor_igual","distinto", "igual"};
-    private String opCompatiblesBoolean[] = {"or", "and", "not"};
+    private final String opCompatiblesInteger []= {"suma", "resta", "division", "producto", "asignacion","menor","mayor", "menor_igual", "mayor_igual","distinto", "igual"};
+    private String opCompatiblesBoolean[] = {"or", "and", "not", "igual"};
 
     public TipoExp(String unTipoDato) {
 

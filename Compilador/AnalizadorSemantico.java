@@ -22,13 +22,13 @@ public class AnalizadorSemantico {
             for (i = 0 ; i < entorno.getTablaSimbolos().size(); i++) {
                 entorno.getTablaSimbolos().get(i).setTipo(tipo);
             }
-            entorno.setIndiceTabla(i+1); //actualiza el indice de la tabla porque ya seteo tipos de datos en las variables
+            entorno.setIndiceTabla(i); //actualiza el indice de la tabla porque ya seteo tipos de datos en las variables
         }
         else{
             for (i = indiceActual ; i < entorno.getTablaSimbolos().size(); i++) {
                 entorno.getTablaSimbolos().get(i).setTipo(tipo);
             }
-            entorno.setIndiceTabla(i+1);
+            entorno.setIndiceTabla(i);
         }
     }
 

@@ -129,7 +129,7 @@ public class PilaEntornos {
             }
         }
         if (indice != -1) {
-            salida = aux.obtenerVariableEntorno(i).getTipo();
+            salida = aux.obtenerVariableEntorno(indice).getTipo();
         }
         return salida;
     }
