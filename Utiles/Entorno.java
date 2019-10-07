@@ -10,20 +10,26 @@ public class Entorno {
     private Entorno invocador;    // un entorno puede llamar a muchos ...pero en un determinado momento solo tiene uno
     private String nombreEntorno;
 
+    //para el programa principal
     public Entorno() {
-
-	// ver que crea como entorno inicial
+        indiceTabla = 0;
+        tablaSimbolos = new ArrayList<Variable>();
     }
-
-    public void setInvocador(Entorno unEntorno) {
-        this.invocador = unEntorno;
-
+    //para el resto de los entornos
+    public Entorno(Entorno invocador) {
+        indiceTabla = 0;
+        tablaSimbolos = new ArrayList<Variable>();
+        this.invocador = invocador;
     }
-
+    
+    public void setInvocador(Entorno invocador) {
+        this.invocador = invocador;
+    }
+    
     public Entorno getInvocador() {
         return this.invocador;
     }
-
+    
     public ArrayList<Variable> getTablaSimbolos() {
         return tablaSimbolos;
     }
