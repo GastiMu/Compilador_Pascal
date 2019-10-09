@@ -38,6 +38,10 @@ public class Entorno {
         this.tablaSimbolos = tablaSimbolos;
     }
 
+    public void setIndiceTablaCargada() { 
+        this.indiceTabla++; 
+    } 
+    
     public void setIndiceTabla(int indiceTabla) {
         this.indiceTabla = indiceTabla;
     }

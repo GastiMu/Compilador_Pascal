@@ -6,7 +6,7 @@ import static Compilador.Errores.errorSemantico;
 import static Compilador.Errores.errorSintactico;
 import Utiles.Entorno;
 import Utiles.PilaEntornos;
-import utiles.TipoExp;
+import Utiles.TipoExp;
 
 public class AnalizadorSintactico {
 
@@ -183,20 +183,30 @@ public class AnalizadorSintactico {
 
     public void declaracionFuncion() {
         String tipoAux;
+        Entorno invocador;
+        String temp;
+        int indInvocador;
         match(new Token("palabraReservada", "function"));
         Entorno funcion = new Entorno(pila.obtenerTope());
+        invocador = funcion.getInvocador();
         pila.apilarEntorno(funcion);
         match(new Token("identificador", "tokenId"));
         funcion.setNombreEntorno(temporal);
-        AnalizadorSemantico.insertarVariables(funcion, temporal);
+        temp = temporal;
+        AnalizadorSemantico.insertarVariables(funcion, temp);
+        AnalizadorSemantico.insertarVariables(invocador, temp);
         funcion.setIndiceTabla(1); //el indice de tabla comienza en 1 porque en 0 esta la variable de retorno de la funcion(y no hay que setear su tipo)
-
+        invocador.setIndiceTablaCargada(); //actualiza la tabla del principal con la "variable retorno" de la funcion
+        
+        
         if (preanalisis.getValor().equalsIgnoreCase("parenAbre")) {
             parametrosFormales(funcion);
         }
         match(new Token("opPuntuacion", "dosPuntos"));
         tipoAux = tipoDato();
         funcion.getTablaSimbolos().get(0).setTipo(tipoAux); //setea la variable de retorno con el mismo tipo de dato que la funcion
+        indInvocador = invocador.existeVariableEntorno(temp);
+        invocador.getTablaSimbolos().get(indInvocador).setTipo(tipoAux);
         match(new Token("opPuntuacion", "puntoYComa"));
         if (preanalisis.getValor().equalsIgnoreCase("var")) {
             declaracionVariables(funcion);
@@ -214,14 +224,18 @@ public class AnalizadorSintactico {
     } // fin de declaracionFuncion
 
     public void declaracionProcedimiento() {
-
+        String temp;
+        Entorno invocador;
         match(new Token("palabraReservada", "procedure"));
         Entorno procedimiento = new Entorno(pila.obtenerTope());
         pila.apilarEntorno(procedimiento);
+        invocador = procedimiento.getInvocador();
         match(new Token("identificador", "tokenId"));
         procedimiento.setNombreEntorno(temporal);
-        AnalizadorSemantico.insertarVariables(procedimiento, temporal);
-
+        temp = temporal;
+        AnalizadorSemantico.insertarVariables(procedimiento, temp);
+        AnalizadorSemantico.insertarVariables(invocador, temp);
+        
         if (preanalisis.getValor().equalsIgnoreCase("parenAbre")) {
             parametrosFormales(procedimiento);
         }
@@ -369,19 +383,20 @@ public class AnalizadorSintactico {
         return tipoD;
     }
 
+    //cambio de lugar los parametros para el caso "pruebaSemantico_a complejo" (antes usaba td)
     public TipoExp expresion1Aux(TipoExp td, TipoExp tipoD) {
         boolean compatible;
         TipoExp exp = new TipoExp();
         if (preanalisis.getValor().equalsIgnoreCase("and")) {
 
             match(new Token("palabraReservada", "and"));
-            compatible = td.verifCompatibilidadOperacion("or");
+            compatible = tipoD.verifCompatibilidadOperacion("and");
 
                 if (!compatible) {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
-                    TipoExp ladoDer = expresion2(td);
-                    compatible = td.compararAmbosLados(ladoDer);
+                    TipoExp ladoDer = expresion2(tipoD);
+                    compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
                     } else {
@@ -558,19 +573,20 @@ public class AnalizadorSintactico {
         return tipoD;
     }
 
+    //cambio de lugar los parametros para el caso "pruebaSemantico_a" (antes usaba ladoIzq)
     public TipoExp terminoSumRestAux(TipoExp ladoIzq, TipoExp tipoD) {
         boolean compatible;
         TipoExp exp = new TipoExp();
         if (preanalisis.getValor().equalsIgnoreCase("suma")) {
             match(new Token("sum_res", "suma"));
 
-            compatible = ladoIzq.verifCompatibilidadOperacion("suma");
+            compatible = tipoD.verifCompatibilidadOperacion("suma");
 
             if (!compatible) {
                 errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
             } else {
-                TipoExp ladoDer = auxiliarSumaRest(ladoIzq);
-                compatible = ladoIzq.compararAmbosLados(ladoDer);
+                TipoExp ladoDer = auxiliarSumaRest(tipoD);
+                compatible = tipoD.compararAmbosLados(ladoDer);
                 if (!compatible) {
                     errorSemantico("Error, no son compatibles los tipos de dato.");
                 } else {
@@ -581,13 +597,13 @@ public class AnalizadorSintactico {
         } else {
             if (preanalisis.getValor().equalsIgnoreCase("resta")) {
                 match(new Token("sum_res", "resta"));
-                compatible = ladoIzq.verifCompatibilidadOperacion("resta");
+                compatible = tipoD.verifCompatibilidadOperacion("resta");
 
                 if (!compatible) {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
-                    TipoExp ladoDer = auxiliarSumaRest(ladoIzq);
-                    compatible = ladoIzq.compararAmbosLados(ladoDer);
+                    TipoExp ladoDer = auxiliarSumaRest(tipoD);
+                    compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
                     } else {
@@ -642,7 +658,7 @@ public class AnalizadorSintactico {
         } else {
             if (preanalisis.getValor().equalsIgnoreCase("division")) {
                 match(new Token("mult_div", "division"));
-                compatible = tipoD.verifCompatibilidadOperacion("dvision");
+                compatible = tipoD.verifCompatibilidadOperacion("division");
 
                 if (!compatible) {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");

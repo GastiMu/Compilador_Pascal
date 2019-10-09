@@ -22,8 +22,7 @@ public class PilaEntornos {
     }
 
     public boolean apilarEntorno(Entorno ent) {
-        //actualizo quien llamo al ambiente
-        ent.setInvocador(tope);
+        //no tengo que indicar el invocador porque lo cambie en sintactico cuando cree entorno
         cantidadEntornos++;
         //actualiza el tope para que apunte al nuevo etorno
         tope = ent; //puntero tope
@@ -45,8 +44,8 @@ public class PilaEntornos {
     }
 
     public Entorno obtenerTope() {
-
-        return tope.getInvocador();
+        //aca cambie porque era el invocador del tope cuando en realidad es el tope
+        return tope;
     }
 
     public boolean esVacia() {
