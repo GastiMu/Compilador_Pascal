@@ -161,7 +161,7 @@ public class AnalizadorSintactico {
         }
 
         // System.out.println("antes cuerpo");
-        cuerpoSubprograma();
+        cuerpoSubprograma("subprogama");
         //System.out.println("paso cuerpo");
         match(new Token("opPuntuacion", "punto"));
 
@@ -219,7 +219,7 @@ public class AnalizadorSintactico {
                 declaracionProcedimiento();
             }
         }
-        cuerpoSubprograma();
+        cuerpoSubprograma("subprograma");
         match(new Token("opPuntuacion", "puntoYComa"));
     } // fin de declaracionFuncion
 
@@ -250,16 +250,17 @@ public class AnalizadorSintactico {
                 declaracionProcedimiento();
             }
         }
-        cuerpoSubprograma();
+        cuerpoSubprograma("subprograma");
         match(new Token("opPuntuacion", "puntoYComa"));
     }
 
-    public void cuerpoSubprograma() {
+    public void cuerpoSubprograma(String procedencia) {
 
         match(new Token("palabraReservada", "begin"));
         bloque();
         match(new Token("palabraReservada", "end"));
-        pila.desapilarEntorno();
+        if(procedencia.equalsIgnoreCase("subprograma")) //desapila solo si es end de subprograma
+            pila.desapilarEntorno();
     }
 
     public void parametrosFormales(Entorno entorno) {
@@ -745,7 +746,7 @@ public class AnalizadorSintactico {
         } else {
             if (preanalisis.getValor().equalsIgnoreCase("parenAbre")) {
                 match(new Token("parentizacion", "parenAbre"));
-                expresion();
+                td = expresion();
                 match(new Token("parentizacion", "parenCierra"));
             } else {
                 errorSintactico("Error, se esperaba 'constanteNum', 'id' o '(' .");
@@ -776,10 +777,12 @@ public class AnalizadorSintactico {
 
             case "true":
                 match(new Token("palabraReservada", "true"));
+                td.setTipoDato("boolean");
                 break;
 
             case "false":
                 match(new Token("palabraReservada", "false"));
+                td.setTipoDato("boolean");
                 break;
 
             default:
@@ -809,14 +812,19 @@ public class AnalizadorSintactico {
     }
 
     public void sentenciaCondicional() {
-
+        TipoExp tipoD = new TipoExp();
         match(new Token("palabraReservada", "if"));
-        expresion();
-        match(new Token("palabraReservada", "then"));
-        sentencias();
-        if (preanalisis.getValor().equalsIgnoreCase("else")) {
-            match(new Token("palabraReservada", "else"));
+        tipoD = expresion();
+        if(!tipoD.getTipoDato().equalsIgnoreCase("boolean")){
+            Errores.errorSemantico("La condicion en un if debe ser booleana");
+        }
+        else{
+            match(new Token("palabraReservada", "then"));
             sentencias();
+            if (preanalisis.getValor().equalsIgnoreCase("else")) {
+                match(new Token("palabraReservada", "else"));
+                sentencias();
+            }
         }
     }
 
@@ -825,8 +833,9 @@ public class AnalizadorSintactico {
             sentenciaSimple();
         } else {
             if (preanalisis.getValor().equalsIgnoreCase("begin")) {
-                cuerpoSubprograma();
-            } else {
+                cuerpoSubprograma("otro");
+            }
+            else {
                 errorSintactico("Error, se esperaba 'id', 'if', 'while' o 'begin' .");
             }
         }
@@ -909,10 +918,16 @@ public class AnalizadorSintactico {
     }
 
     public void sentenciaRepetitiva() {
+        TipoExp tipoD = new TipoExp();
         match(new Token("palabraReservada", "while"));
-        expresion();
-        match(new Token("palabraReservada", "do"));
-        sentencias();
+        tipoD = expresion();
+        if(!tipoD.getTipoDato().equalsIgnoreCase("boolean")){
+            Errores.errorSemantico("La condicion en un while debe ser booleana");
+        }
+        else{
+            match(new Token("palabraReservada", "do"));
+            sentencias();
+        }
     }
 
 } // fin de la clase  

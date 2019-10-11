@@ -48,6 +48,10 @@ public class PilaEntornos {
         return tope;
     }
 
+    public int getCantEntornos(){
+        return cantidadEntornos;
+    }
+    
     public boolean esVacia() {
 
         return (tope == null);
