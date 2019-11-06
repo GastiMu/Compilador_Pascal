@@ -7,6 +7,8 @@ import static Compilador.Errores.errorSintactico;
 import Utiles.Entorno;
 import Utiles.PilaEntornos;
 import Utiles.TipoExp;
+import Utiles.*;
+
 
 public class AnalizadorSintactico {
 
@@ -19,7 +21,10 @@ public class AnalizadorSintactico {
     private final AnalizadorLexico lexico;
     private static Token preanalisis;
     private PilaEntornos pila;
-    private static String temporal = " ";
+    private static String temporal = " ", tokenIdLeido = " ";
+    private final GeneradorMepa mepa;   // instancia para agregar elementos a la cadena
+    private static int constante, anidamiento, nroParam = 0;
+    private EscribirArchivo salida;
 
     public static void main(String[] args) {
 
@@ -30,6 +35,8 @@ public class AnalizadorSintactico {
         lexico = new AnalizadorLexico(archivo);
         preanalisis = lexico.retornarToken();
         pila = new PilaEntornos();
+        this.mepa=new GeneradorMepa();
+        this.salida=new EscribirArchivo("salidaMepa");
     }
 
     private static boolean enPrimeros(Token t, String[] primeros) {
@@ -56,6 +63,9 @@ public class AnalizadorSintactico {
                 try {
                     if (preanalisis.getValor().equalsIgnoreCase("tokenId")) {
                         temporal = preanalisis.getNombre();
+                    }
+                    if (preanalisis.getValor().equalsIgnoreCase("tokenNum")) {
+                        constante = preanalisis.getConstante();
                     }
                     preanalisis = lexico.retornarToken();
                     if (preanalisis.getValor().equalsIgnoreCase("Fin")) {
@@ -119,21 +129,27 @@ public class AnalizadorSintactico {
     }
 
     public void declaracionVariables(Entorno entorno) {
-        String tipoAux; // va a almacenar el tipo de dato de el conjunto de variables
+        
+    	
+    	int cantVariables=0; // 
+    	String tipoAux; // va a almacenar el tipo de dato de el conjunto de variables
         match(new Token("palabraReservada", "var"));
         do {
             match(new Token("identificador", "tokenId"));
-            AnalizadorSemantico.insertarVariables(entorno, temporal);
+            AnalizadorSemantico.insertarVariableLocal(entorno, temporal);
             while (preanalisis.getValor().equalsIgnoreCase("coma")) {
                 match(new Token("opPuntuacion", "coma"));
                 match(new Token("identificador", "tokenId"));
-                AnalizadorSemantico.insertarVariables(entorno, temporal);
+                entorno.incCantVariables();
+                AnalizadorSemantico.insertarVariableLocal(entorno, temporal);
             }
             match(new Token("opPuntuacion", "dosPuntos"));
             tipoAux = tipoDato();
             AnalizadorSemantico.seteadorTipos(tipoAux, entorno);
             match(new Token("opPuntuacion", "puntoYComa"));
         } while (preanalisis.getValor().equalsIgnoreCase("tokenId"));
+        
+        this.mepa.reservarMemoria(cantVariables);
         //System.out.println(entorno.getTablaSimbolos().get(0).getNombre()+" es tipo "+entorno.getTablaSimbolos().get(0).getTipo());
          //   System.out.println(entorno.getTablaSimbolos().get(1).getNombre()+" es tipo "+entorno.getTablaSimbolos().get(1).getTipo());
          //   System.out.println(entorno.getTablaSimbolos().get(2).getNombre()+" es tipo "+entorno.getTablaSimbolos().get(2).getTipo());
@@ -144,6 +160,10 @@ public class AnalizadorSintactico {
     public void programaPrincipal() {
 
         match(new Token("palabraReservada", "program"));
+        
+        this.anidamiento=0;
+        this.mepa.iniProgrPrinc();
+                
         Entorno principal = new Entorno();
         pila.apilarEntorno(principal);
         match(new Token("identificador", "tokenId"));
@@ -151,10 +171,12 @@ public class AnalizadorSintactico {
 
         match(new Token("opPuntuacion", "puntoYComa"));
 
+        String etiquetaProgram = mepa.generarEtiqueta();
+        
         if (preanalisis.getValor().equalsIgnoreCase("var")) {
             declaracionVariables(principal);
+            
         }
-
         while (enPrimeros(preanalisis, primSubprog)) {
 
             subprograma();
@@ -164,16 +186,25 @@ public class AnalizadorSintactico {
         cuerpoSubprograma("subprogama");
         //System.out.println("paso cuerpo");
         match(new Token("opPuntuacion", "punto"));
-
+         this.mepa.liberarMemoria(pila.obtenerTope().getCantVariables());
+        this.mepa.finDePrograma();
+        this.salida.escribirFuente(this.mepa.getCadena());
     } // fin del metodo programaPrincipal
+    
 
     public void subprograma() {
-
+        String etiqueta;
         if (preanalisis.getValor().equalsIgnoreCase("function")) {
+            etiqueta = mepa.generarEtiqueta();
+            mepa.saltarSiempre(etiqueta);
             declaracionFuncion();
+            mepa.destinoDeSalto(etiqueta);
         } else {
             if (preanalisis.getValor().equalsIgnoreCase("procedure")) {
+                etiqueta = mepa.generarEtiqueta();
+                mepa.saltarSiempre(etiqueta);
                 declaracionProcedimiento();
+                mepa.destinoDeSalto(etiqueta);
             } else {
                 errorSintactico("Se esperaba function o procedure");
 
@@ -182,7 +213,11 @@ public class AnalizadorSintactico {
     }
 
     public void declaracionFuncion() {
-        String tipoAux;
+        
+    	
+    	this.anidamiento++;
+    	
+    	String tipoAux;
         Entorno invocador;
         String temp;
         int indInvocador;
@@ -193,14 +228,14 @@ public class AnalizadorSintactico {
         match(new Token("identificador", "tokenId"));
         funcion.setNombreEntorno(temporal);
         temp = temporal;
-        AnalizadorSemantico.insertarVariables(funcion, temp);
-        AnalizadorSemantico.insertarVariables(invocador, temp);
+        AnalizadorSemantico.insertarSubprograma(funcion, temp);
+        AnalizadorSemantico.insertarSubprograma(invocador, temp);
         funcion.setIndiceTabla(1); //el indice de tabla comienza en 1 porque en 0 esta la variable de retorno de la funcion(y no hay que setear su tipo)
         invocador.setIndiceTablaCargada(); //actualiza la tabla del principal con la "variable retorno" de la funcion
         
         
         if (preanalisis.getValor().equalsIgnoreCase("parenAbre")) {
-            parametrosFormales(funcion);
+            parametrosFormales(funcion, invocador);
         }
         match(new Token("opPuntuacion", "dosPuntos"));
         tipoAux = tipoDato();
@@ -208,6 +243,11 @@ public class AnalizadorSintactico {
         indInvocador = invocador.existeVariableEntorno(temp);
         invocador.getTablaSimbolos().get(indInvocador).setTipo(tipoAux);
         match(new Token("opPuntuacion", "puntoYComa"));
+        
+        String etiqueta = mepa.generarEtiqueta();
+        funcion.setEtiqueta(etiqueta);
+        mepa.declararProcedimiento(etiqueta, anidamiento);
+        
         if (preanalisis.getValor().equalsIgnoreCase("var")) {
             declaracionVariables(funcion);
         }
@@ -220,11 +260,17 @@ public class AnalizadorSintactico {
             }
         }
         cuerpoSubprograma("subprograma");
+        
+        mepa.liberarMemoria(funcion.getCantVariables() - nroParam);
+        mepa.finProcedimiento(anidamiento, nroParam);
         match(new Token("opPuntuacion", "puntoYComa"));
     } // fin de declaracionFuncion
 
     public void declaracionProcedimiento() {
-        String temp;
+        
+    	
+    	this.anidamiento++;
+    	String temp;
         Entorno invocador;
         match(new Token("palabraReservada", "procedure"));
         Entorno procedimiento = new Entorno(pila.obtenerTope());
@@ -233,13 +279,18 @@ public class AnalizadorSintactico {
         match(new Token("identificador", "tokenId"));
         procedimiento.setNombreEntorno(temporal);
         temp = temporal;
-        AnalizadorSemantico.insertarVariables(procedimiento, temp);
-        AnalizadorSemantico.insertarVariables(invocador, temp);
+        AnalizadorSemantico.insertarSubprograma(procedimiento, temp);
+        AnalizadorSemantico.insertarSubprograma(invocador, temp);
         
         if (preanalisis.getValor().equalsIgnoreCase("parenAbre")) {
-            parametrosFormales(procedimiento);
+            parametrosFormales(procedimiento, invocador);
         }
         match(new Token("opPuntuacion", "puntoYComa"));
+        
+        String etiqueta = mepa.generarEtiqueta();
+        procedimiento.setEtiqueta(etiqueta);
+        mepa.declararProcedimiento(etiqueta, anidamiento);
+        
         if (preanalisis.getValor().equalsIgnoreCase("var")) {
             declaracionVariables(procedimiento);
         }
@@ -251,6 +302,9 @@ public class AnalizadorSintactico {
             }
         }
         cuerpoSubprograma("subprograma");
+        
+        mepa.liberarMemoria(procedimiento.getCantVariables() - nroParam);
+        mepa.finProcedimiento(anidamiento, nroParam);
         match(new Token("opPuntuacion", "puntoYComa"));
     }
 
@@ -259,57 +313,113 @@ public class AnalizadorSintactico {
         match(new Token("palabraReservada", "begin"));
         bloque();
         match(new Token("palabraReservada", "end"));
-        if(procedencia.equalsIgnoreCase("subprograma")) //desapila solo si es end de subprograma
+        if(procedencia.equalsIgnoreCase("subprograma")){ //desapila solo si es end de subprograma
             pila.desapilarEntorno();
+           this.anidamiento--;
+        }
     }
 
-    public void parametrosFormales(Entorno entorno) {
-
+    public void parametrosFormales(Entorno entorno, Entorno invocador) {
+        int cantParam = contarParametros(anidamiento, entorno);
+        nroParam = 0;
         match(new Token("parentizacion", "parenAbre"));
-        parametroFormalValor(entorno);
+        parametroFormalValor(entorno, invocador, cantParam);
         while (preanalisis.getValor().equalsIgnoreCase("tokenId")) {
             match(new Token("opPuntuacion", "puntoYComa"));
-            parametroFormalValor(entorno);
+            parametroFormalValor(entorno, invocador,cantParam);
         }
         match(new Token("parentizacion", "parenCierra"));
     }
 
-    public void parametroFormalValor(Entorno entorno) {
+    public void parametroFormalValor(Entorno entorno, Entorno invocador, int cantParam) {
         String tipoAux;
+        Variable var;
+        
+        //nroParam indica el indice del parametro en la declaracion
+        
         match(new Token("identificador", "tokenId"));
-        AnalizadorSemantico.insertarVariables(entorno, temporal);
+        AnalizadorSemantico.insertarParam(invocador, temporal); //inserto en el PP como param
+        AnalizadorSemantico.insertarVariableLocal(entorno, temporal); //inserto en el subprog como local
+        var = entorno.obtenerVariableEntorno(nroParam); //obtengo la variable
+        var.setDesplazamiento(nroParam, cantParam);   //calculo el desplazamiento
+        
         while (preanalisis.getValor().equalsIgnoreCase("coma")) {
             match(new Token("opPuntuacion", "coma"));
             match(new Token("identificador", "tokenId"));
-            AnalizadorSemantico.insertarVariables(entorno, temporal);
+            AnalizadorSemantico.insertarParam(invocador, temporal); //inserto en el PP como param
+            AnalizadorSemantico.insertarVariableLocal(entorno, temporal); //inserto en el subprog como local
+            var = entorno.obtenerVariableEntorno(nroParam); //obtengo la variable
+            var.setDesplazamiento(nroParam, cantParam);   //calculo el desplazamiento
+            
+            //ver como solucionamos el orden entre reserva de memoria y apilar parametros
         }
         match(new Token("opPuntuacion", "dosPuntos"));
         tipoAux = tipoDato();
-        AnalizadorSemantico.seteadorTipos(tipoAux, entorno);
-
+        AnalizadorSemantico.seteadorTipos(tipoAux, entorno);    //setea tipos en las variables como param del subprograma
+        AnalizadorSemantico.seteadorTipos(tipoAux, invocador);  //setea tipos en los parametros en el invocador
+        
+        nroParam++;
     } // fin de parametro formal Valor
 
+    //cuando llego aca, tokenIdLeido tiene el nombre de la funcion o proced que invoco la llamada
+    //consecutivamente en la tabla de simbolos deberian ubicarse los parametros del subprograma
     public void parametrosReales() {
+        Variable var; 
+        String tipo;
+        int indice, cantParam;
+        Entorno entornoActual = pila.obtenerTope();
         match(new Token("parentizacion", "parenAbre"));
-        expresion();
-        while (preanalisis.getValor().equalsIgnoreCase("coma")) {
-            match(new Token("opPuntuacion", "coma"));
-            expresion();
+        indice = entornoActual.existeVariableEntorno(tokenIdLeido);
+        //System.out.println("ind "+indice+" nom: "+entornoActual.obtenerVariableEntorno(indice).getNombre());
+        indice++; //me ubico en el indice del primer parametro
+        cantParam = contarParametros(indice, entornoActual);
+        //System.out.println(cantParam);
+        var = entornoActual.obtenerVariableEntorno(indice); //obtengo el primer parametro (y verifico que lo sea)
+        if(var.esParametro()){
+            cantParam--;
+            tipo = expresion().getTipoDato();   //obtengo el tipo de dato de la expresion
+            if(tipo.equalsIgnoreCase(var.getTipo())){   //comparo que coincidan los tipos
+                while (cantParam != 0 && preanalisis.getValor().equalsIgnoreCase("coma") && entornoActual.obtenerVariableEntorno(indice+1).esParametro()) {   //mientras que siga una coma y en la tabla siga otro parametro
+                    match(new Token("opPuntuacion", "coma"));
+                    indice++;
+                    var = entornoActual.obtenerVariableEntorno(indice);
+                    if(var.esParametro()){
+                        cantParam--;
+                        tipo = expresion().getTipoDato();
+                        if(!tipo.equalsIgnoreCase(var.getTipo())){
+                            Errores.errorSemantico("los tipos de dato de los parametros no coinciden");
+                        }
+                    }
+                    else{
+                        Errores.errorSemantico("la cantidad de parametros en invocacion no coinciden con declaracion");
+                    }
+                }
+            }
+            if(cantParam != 0){
+                Errores.errorSemantico("la cantidad de parametros en invocacion no coinciden con declaracion");
+            }
+            match(new Token("parentizacion", "parenCierra"));
         }
-        match(new Token("parentizacion", "parenCierra"));
+        else{
+            Errores.errorSemantico("la cantidad de parametros en invocacion no coinciden con declaracion");
+        }
     }
 
     public void procedEsp() {
         switch (preanalisis.getValor()) {
             case "read":
-                match(new Token("palabraReservada", "read"));
+            	match(new Token("palabraReservada", "read"));
                 match(new Token("parentizacion", "parenAbre"));
                 match(new Token("identificador", "tokenId"));
+                Variable variable = new Variable(temporal, anidamiento, despl);
+                this.mepa.leer(variable);
                 match(new Token("parentizacion", "parenCierra"));
                 break;
 
             case "write":
+            	
                 match(new Token("palabraReservada", "write"));
+                this.mepa.imprimir();
                 match(new Token("parentizacion", "parenAbre"));
                 expresion();
                 match(new Token("parentizacion", "parenCierra"));
@@ -321,24 +431,19 @@ public class AnalizadorSintactico {
         }
     }
 
-    public void llamadaFunc() {
-        if (preanalisis.getValor().equalsIgnoreCase("parenAbre")) {
-            parametrosReales();
-        }
-    }
-
     public void sentenciaAsignacion(TipoExp ladoIzq) {
         boolean compatible;
         TipoExp ladoDer = new TipoExp();
         match(new Token("opAsignacion", "asignacion"));
         
+        Variable v = new Variable(temporal, anidamiento, despl);
+        mepa.asignarVariable(v);
         ladoDer = expresion();
         compatible = ladoIzq.compararAmbosLados(ladoDer);
         if (!compatible) {
             errorSemantico("Error, no son compatibles los tipos de dato.");
         }
     }
-
     
 
     public TipoExp expresion() {
@@ -761,11 +866,13 @@ public class AnalizadorSintactico {
 
             case "tokenNum":
                 match(new Token("constanteNumerica", "tokenNum"));
+                mepa.apilarConstante(constante);
                 td.setTipoDato("integer");
                 break;
 
             case "tokenId":
                 match(new Token("identificador", "tokenId"));
+                tokenIdLeido = temporal;
                 if (!pila.existeVarEnPila(temporal)) {
                     errorSemantico("La variable no existe en el programa");
                 } else {
@@ -814,16 +921,24 @@ public class AnalizadorSintactico {
     public void sentenciaCondicional() {
         TipoExp tipoD = new TipoExp();
         match(new Token("palabraReservada", "if"));
+        
         tipoD = expresion();
         if(!tipoD.getTipoDato().equalsIgnoreCase("boolean")){
             Errores.errorSemantico("La condicion en un if debe ser booleana");
         }
         else{
             match(new Token("palabraReservada", "then"));
+            String etiqueta = mepa.generarEtiqueta();
+            mepa.saltarSiFalso(etiqueta);
             sentencias();
             if (preanalisis.getValor().equalsIgnoreCase("else")) {
+                String etiquetaElse = mepa.generarEtiqueta();
+                mepa.saltarSiempre(etiquetaElse);
                 match(new Token("palabraReservada", "else"));
+                mepa.destinoDeSalto(etiqueta);
+                
                 sentencias();
+                mepa.destinoDeSalto(etiquetaElse);
             }
         }
     }
@@ -846,6 +961,8 @@ public class AnalizadorSintactico {
         switch (preanalisis.getValor()) {
             case "tokenId":
                 match(new Token("identificador", "tokenId"));
+                //tokenIdLeido utilizado para casos que sea el nombre del subprograma
+                tokenIdLeido = temporal;
                 if (!pila.existeVarEnPila(temporal)) {
                     errorSemantico("La variable no existe en el programa");
                 } else {
@@ -881,10 +998,13 @@ public class AnalizadorSintactico {
     public void absId(TipoExp ladoIzq) {
         if (preanalisis.getValor().equalsIgnoreCase("asignacion")) {
             sentenciaAsignacion(ladoIzq);
-
         } else {
             if (preanalisis.getValor().equalsIgnoreCase("parenAbre")) {
+                mepa.reservarMemoria(1);
                 parametrosReales();
+                Variable e = new Variable();
+                mepa.llamarProcedimiento(pila.devolverEtiqueta(temporal));
+                
             } else {
                 if (preanalisis.getValor().equalsIgnoreCase("puntoYComa")) {
                     match(new Token("opPuntuacion", "puntoYComa"));
@@ -920,14 +1040,30 @@ public class AnalizadorSintactico {
     public void sentenciaRepetitiva() {
         TipoExp tipoD = new TipoExp();
         match(new Token("palabraReservada", "while"));
+        String etiquetaPrincipioWhile = mepa.generarEtiqueta();
+        mepa.destinoDeSalto(etiquetaPrincipioWhile);
         tipoD = expresion();
         if(!tipoD.getTipoDato().equalsIgnoreCase("boolean")){
             Errores.errorSemantico("La condicion en un while debe ser booleana");
         }
         else{
+            String etiquietaFueraDelWhile = mepa.generarEtiqueta();
+            mepa.saltarSiFalso(etiquietaFueraDelWhile);
             match(new Token("palabraReservada", "do"));
             sentencias();
+            mepa.saltarSiempre(etiquetaPrincipioWhile);
+            mepa.destinoDeSalto(etiquietaFueraDelWhile);
         }
     }
 
+    private static int contarParametros(int indice, Entorno ent){
+        // mientras quede tabla por recorrer y sigan habiendo parametros consecutivos, incremento
+        int cant = 0;
+        
+        while(indice < ent.getTablaSimbolos().size() && ent.getTablaSimbolos().get(indice).esParametro()){
+            cant ++;
+            indice++;
+        }
+        return cant;
+    }
 } // fin de la clase  

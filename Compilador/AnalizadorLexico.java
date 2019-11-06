@@ -77,6 +77,7 @@ public class AnalizadorLexico {
             int numb = Integer.parseInt(lexema);
             //String pal = "tokenNum: " + numb + "@";
             token = new Token("constanteNumerica", "tokenNum");
+            token.setConstante(numb);
         } else {
 
             if (Character.isLetter(linea.charAt(index))) {

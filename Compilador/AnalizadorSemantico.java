@@ -6,7 +6,6 @@
 package Compilador;
 
 import Utiles.Entorno;
-import Utiles.Variable;
 
 /**
  *
@@ -32,10 +31,15 @@ public class AnalizadorSemantico {
         }
     }
 
-    public static void insertarVariables(Entorno entorno, String nombreVar) {
-        Variable var = new Variable();
-        var.setNombre(nombreVar);
-        entorno.agregarVariable(nombreVar);
+    public static void insertarVariableLocal(Entorno entorno, String nombreVar) {
+        entorno.agregarVariable(nombreVar, "variable");
     }
 
+    public static void insertarParam(Entorno entorno, String nombreVar) {
+        entorno.agregarVariable(nombreVar, "parametro"); 
+    }
+    
+    public static void insertarSubprograma(Entorno entorno, String nombreVar) {
+        entorno.agregarVariable(nombreVar, "retorno"); 
+    }
 }

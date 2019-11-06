@@ -137,4 +137,22 @@ public class PilaEntornos {
         return salida;
     }
 
+    public String devolverEtiqueta(String nombre){
+        boolean encontrado=false;
+        int cant = this.cantidadEntornos;
+        Entorno actual = tope;
+        String etiqueta="";
+        
+        while(!encontrado && cant>0){
+            if(actual.getNombreEntorno().equalsIgnoreCase(nombre)){
+                encontrado = true;
+                etiqueta = actual.getEtiqueta();
+            }
+            else{    
+                cant--;
+                actual = actual.getInvocador();
+                    }
+        }
+        return etiqueta;
+    }
 }

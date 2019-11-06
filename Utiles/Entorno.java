@@ -9,17 +9,39 @@ public class Entorno {
     private ArrayList<Variable> tablaSimbolos;
     private Entorno invocador;    // un entorno puede llamar a muchos ...pero en un determinado momento solo tiene uno
     private String nombreEntorno;
+    private int cantVariables;
+    private String etiqueta;
+
+   
 
     //para el programa principal
     public Entorno() {
         indiceTabla = 0;
         tablaSimbolos = new ArrayList<Variable>();
+        this.cantVariables=0;
     }
     //para el resto de los entornos
     public Entorno(Entorno invocador) {
         indiceTabla = 0;
         tablaSimbolos = new ArrayList<Variable>();
         this.invocador = invocador;
+        this.cantVariables=0;
+    }
+
+    public void incCantVariables() {
+        this.cantVariables ++;
+    }
+
+     public String getEtiqueta() {
+        return etiqueta;
+    }
+
+    public void setEtiqueta(String etiqueta) {
+        this.etiqueta = etiqueta;
+    }
+    
+    public int getCantVariables() {
+        return cantVariables;
     }
     
     public void setInvocador(Entorno invocador) {
@@ -82,13 +104,23 @@ public class Entorno {
         return var;
     }
 
-    public boolean agregarVariable(String nombre) {
+    public boolean agregarVariable(String nombre, String procedencia) {
 
         boolean estado = false;
-        if (existeVariableEntorno(nombre) == -1) {
-            Variable nuevaVar = new Variable(nombre);
-            tablaSimbolos.add(nuevaVar);
-            estado = true;
+        if (existeVariableEntorno(nombre) == -1 || procedencia.equalsIgnoreCase("parametro")) {
+            if(procedencia.equalsIgnoreCase("parametro")){
+                Variable nuevaVar = new Variable(); //si es solo parametro para el invocador no importa el nombre
+                nuevaVar.setProcedencia(procedencia);
+                tablaSimbolos.add(nuevaVar);
+                estado = true;
+            }
+            else{ 
+                Variable nuevaVar = new Variable(nombre);
+                nuevaVar.setProcedencia(procedencia);
+                tablaSimbolos.add(nuevaVar);
+                estado = true;
+            }
+            
         } else {
             errorSemantico("Error, la variable " + nombre + " ya existe en el entorno");
         }

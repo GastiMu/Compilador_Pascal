@@ -21,7 +21,7 @@ public class Errores {
     }
 
     public static void errorSemantico(String error) {
-        System.out.println("Error semantico en linea " + obtNumLinea() + ": " + error + ".");
+        System.out.println("Error semantico entre lineas "+(obtNumLinea()-1)+" y "+(obtNumLinea()+1)+": " + error + ".");
         System.exit(0);
     }
     

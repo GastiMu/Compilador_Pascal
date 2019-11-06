@@ -10,6 +10,7 @@ public class Token {
     private String tipo;
     private String valor;
     private String nombre;
+    private int constante;
 
     public Token() {
     }
@@ -25,6 +26,14 @@ public class Token {
 
     public void setNombre(String nom) {
         this.nombre = nom;
+    }
+    
+    public int getConstante() {
+        return constante;
+    }
+
+    public void setConstante(int n) {
+        this.constante = n;
     }
 
     public String getTipo() {
