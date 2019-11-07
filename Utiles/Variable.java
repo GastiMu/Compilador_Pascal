@@ -67,6 +67,12 @@ public void setDesplazamiento(int i, int n) {
     this.despl = -(n+3-i);
 }
 
+public void setDesplazamiento(int posicion) {
+    
+    
+    this.despl = posicion;
+}
+
 public int getDesplazamiento() {
 	return despl;
 }

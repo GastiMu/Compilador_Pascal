@@ -216,7 +216,7 @@ public class AnalizadorSintactico {
         
     	
     	this.anidamiento++;
-    	
+    	Variable var;
     	String tipoAux;
         Entorno invocador;
         String temp;
@@ -239,7 +239,9 @@ public class AnalizadorSintactico {
         }
         match(new Token("opPuntuacion", "dosPuntos"));
         tipoAux = tipoDato();
-        funcion.getTablaSimbolos().get(0).setTipo(tipoAux); //setea la variable de retorno con el mismo tipo de dato que la funcion
+        var = funcion.getTablaSimbolos().get(0);
+        var.setTipo(tipoAux); //setea la variable de retorno con el mismo tipo de dato que la funcion
+        var.setDesplazamiento(0, nroParam);
         indInvocador = invocador.existeVariableEntorno(temp);
         invocador.getTablaSimbolos().get(indInvocador).setTipo(tipoAux);
         match(new Token("opPuntuacion", "puntoYComa"));
@@ -405,13 +407,14 @@ public class AnalizadorSintactico {
         }
     }
 
+    //desplazamiento: −(nroParam + 3 − i)
     public void procedEsp() {
         switch (preanalisis.getValor()) {
             case "read":
             	match(new Token("palabraReservada", "read"));
                 match(new Token("parentizacion", "parenAbre"));
                 match(new Token("identificador", "tokenId"));
-                Variable variable = new Variable(temporal, anidamiento, despl);
+                Variable variable = pila.buscarAparicionVar(temporal);
                 this.mepa.leer(variable);
                 match(new Token("parentizacion", "parenCierra"));
                 break;
@@ -436,7 +439,7 @@ public class AnalizadorSintactico {
         TipoExp ladoDer = new TipoExp();
         match(new Token("opAsignacion", "asignacion"));
         
-        Variable v = new Variable(temporal, anidamiento, despl);
+        Variable v = pila.buscarAparicionVar(temporal);
         mepa.asignarVariable(v);
         ladoDer = expresion();
         compatible = ladoIzq.compararAmbosLados(ladoDer);

@@ -119,6 +119,7 @@ public class Entorno {
                 nuevaVar.setProcedencia(procedencia);
                 tablaSimbolos.add(nuevaVar);
                 estado = true;
+                nuevaVar.setDesplazamiento(cantVariables); //probar si funciona
             }
             
         } else {
