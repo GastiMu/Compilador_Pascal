@@ -11,19 +11,24 @@ public class Entorno {
     private String nombreEntorno;
     private int cantVariables;
     private String etiqueta;
+    private int anidamiento;
+    private int desplazamiento;
 
     //para el programa principal
     public Entorno() {
         indiceTabla = 0;
         tablaSimbolos = new ArrayList<Variable>();
         this.cantVariables=0;
+        desplazamiento=0;
     }
     //para el resto de los entornos
-    public Entorno(Entorno invocador, boolean tipo) {
+    public Entorno(Entorno invocador, boolean tipo, int anidamiento) {
         indiceTabla = 0;
         tablaSimbolos = new ArrayList<Variable>();
         this.invocador = invocador;
         this.cantVariables=0;
+        this.anidamiento = anidamiento;
+        desplazamiento=0;
     }
 
     public void incCantVariables() {
@@ -82,10 +87,12 @@ public class Entorno {
     public int existeVariableEntorno(String nombreVar) {
         int i = 0;
         int indice = -1;
+        Variable aux;
         int longitud = this.tablaSimbolos.size();
         boolean salir = false;
         while ((i < longitud) && (!salir)) {
-            if (this.tablaSimbolos.get(i).getNombre().equalsIgnoreCase(nombreVar)) {
+            aux = this.tablaSimbolos.get(i);
+            if (aux.getNombre().equalsIgnoreCase(nombreVar)) {
                 salir = true;
                 indice = i;
             } else {
@@ -105,19 +112,19 @@ public class Entorno {
     public boolean agregarVariable(String nombre, String etiqueta, String tipoSubprograma) {
 
         boolean estado = false;
-        if (existeVariableEntorno(nombre) == -1 || tipoSubprograma.equalsIgnoreCase("parametro")) {
-            if(tipoSubprograma.equalsIgnoreCase("parametro")){
+        if(tipoSubprograma.equalsIgnoreCase("parametro")){
                 Variable nuevaVar = new Variable(); //si es solo parametro para el invocador no importa el nombre
                 nuevaVar.setProcedencia(tipoSubprograma);
                 tablaSimbolos.add(nuevaVar);
                 estado = true;
             }
-            else{ 
+        else if (existeVariableEntorno(nombre) == -1){ 
                 if(tipoSubprograma.equalsIgnoreCase("funcion") || tipoSubprograma.equalsIgnoreCase("procedimiento")){
-                    Variable nuevaVar = new Variable(); //si es solo parametro para el invocador no importa el nombre
+                    Variable nuevaVar = new Variable(nombre); //si es solo parametro para el invocador no importa el nombre
                     nuevaVar.setProcedencia(tipoSubprograma);
                     tablaSimbolos.add(nuevaVar);
                     nuevaVar.setEtiqueta(etiqueta);
+                    nuevaVar.setAnidamiento(this.anidamiento);
                     
                     if(tipoSubprograma.equalsIgnoreCase("funcion"))
                         nuevaVar.setFuncion(true);
@@ -126,19 +133,19 @@ public class Entorno {
                         nuevaVar.setFuncion(false);
                     
                     estado = true;
-                }
+                    }
                 else{
                     Variable nuevaVar = new Variable(nombre);
                     nuevaVar.setProcedencia(tipoSubprograma);
                     tablaSimbolos.add(nuevaVar);
                     estado = true;
-                    nuevaVar.setDesplazamiento(cantVariables); //probar si funciona
+                    nuevaVar.setDesplazamiento(desplazamiento); 
+                    desplazamiento++; //cada local que carga incrementa desplazamiento
                 }
             }
-            
-        } else {
-            errorSemantico("Error, la variable " + nombre + " ya existe en el entorno");
-        }
+            else {
+                errorSemantico("Error, la variable " + nombre + " ya existe en el entorno");
+            }
 
         return estado;
     }

@@ -6,7 +6,7 @@ public class Variable {
 	private String tipo;
 	private String procedencia;
 	private int anidamiento;
-        private int despl;
+        private int despl;  // para parametros −(n + 3 − i)
         private String etiqueta;
         private boolean funcion;
 	

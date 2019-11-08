@@ -8,10 +8,6 @@ package Compilador;
 import Utiles.*;
 
 /**
- * ver los desplazamientos y los saltos
- *
- * considerar mas de un switch, ya sea para las operaciones o para otras
- * sentencias
  *
  * @author Gaston
  */
