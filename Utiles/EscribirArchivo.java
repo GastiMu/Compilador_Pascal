@@ -20,13 +20,17 @@ public class EscribirArchivo {
     BufferedWriter bw;
 
     //genera un archivo extension .mep
-    public EscribirArchivo(String nombre) {
+   /* public EscribirArchivo(String nombre) {
         if (nombre.contains(".")) {
             nombre = nombre.substring(0, nombre.lastIndexOf("."));
         }
         archivo = new File(nombre + ".mep");
-    }
+    }*/
 
+    public EscribirArchivo() {
+        archivo = new File("mepa.mep");
+    }
+    
     public void escribirFuente(String fuente) {
         try {
             bw = new BufferedWriter(new FileWriter(archivo));

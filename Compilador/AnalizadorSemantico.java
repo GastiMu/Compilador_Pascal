@@ -32,14 +32,14 @@ public class AnalizadorSemantico {
     }
 
     public static void insertarVariableLocal(Entorno entorno, String nombreVar) {
-        entorno.agregarVariable(nombreVar, "variable");
+        entorno.agregarVariable(nombreVar," " ,"variable");
     }
 
     public static void insertarParam(Entorno entorno, String nombreVar) {
-        entorno.agregarVariable(nombreVar, "parametro"); 
+        entorno.agregarVariable(nombreVar," " ,"parametro"); 
     }
     
-    public static void insertarSubprograma(Entorno entorno, String nombreVar) {
-        entorno.agregarVariable(nombreVar, "retorno"); 
+    public static void insertarSubprograma(Entorno entorno, String etiqueta,String nombreVar, String tipoSubprograma) {
+        entorno.agregarVariable(nombreVar, etiqueta, tipoSubprograma); 
     }
 }

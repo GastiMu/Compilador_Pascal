@@ -7,6 +7,8 @@ public class Variable {
 	private String procedencia;
 	private int anidamiento;
         private int despl;
+        private String etiqueta;
+        private boolean funcion;
 	
 public Variable(){
 	this.nombre = "";
@@ -24,6 +26,22 @@ public Variable(String nombre, int anidamiento, int desplazamiento){ //solo para
         this.anidamiento = anidamiento;
         this.despl = desplazamiento;
 }
+
+    public void setFuncion(boolean funcion) {
+        this.funcion = funcion;
+    }
+
+    public boolean isFuncion() {
+        return funcion;
+    }
+
+    public void setEtiqueta(String etiqueta) {
+        this.etiqueta = etiqueta;
+    }
+
+    public String getEtiqueta() {
+        return etiqueta;
+    }
 
 public String getProcedencia() {
 	return procedencia;

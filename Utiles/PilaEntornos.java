@@ -137,7 +137,7 @@ public class PilaEntornos {
         return salida;
     }
 
-    public String devolverEtiqueta(String nombre){
+    public Entorno devolverEntorno(String nombre){
         boolean encontrado=false;
         int cant = this.cantidadEntornos;
         Entorno actual = tope;
@@ -146,13 +146,12 @@ public class PilaEntornos {
         while(!encontrado && cant>0){
             if(actual.getNombreEntorno().equalsIgnoreCase(nombre)){
                 encontrado = true;
-                etiqueta = actual.getEtiqueta();
             }
             else{    
                 cant--;
                 actual = actual.getInvocador();
                     }
         }
-        return etiqueta;
+        return actual;
     }
 }

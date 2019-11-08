@@ -12,8 +12,6 @@ public class Entorno {
     private int cantVariables;
     private String etiqueta;
 
-   
-
     //para el programa principal
     public Entorno() {
         indiceTabla = 0;
@@ -21,7 +19,7 @@ public class Entorno {
         this.cantVariables=0;
     }
     //para el resto de los entornos
-    public Entorno(Entorno invocador) {
+    public Entorno(Entorno invocador, boolean tipo) {
         indiceTabla = 0;
         tablaSimbolos = new ArrayList<Variable>();
         this.invocador = invocador;
@@ -39,7 +37,7 @@ public class Entorno {
     public void setEtiqueta(String etiqueta) {
         this.etiqueta = etiqueta;
     }
-    
+
     public int getCantVariables() {
         return cantVariables;
     }
@@ -104,22 +102,38 @@ public class Entorno {
         return var;
     }
 
-    public boolean agregarVariable(String nombre, String procedencia) {
+    public boolean agregarVariable(String nombre, String etiqueta, String tipoSubprograma) {
 
         boolean estado = false;
-        if (existeVariableEntorno(nombre) == -1 || procedencia.equalsIgnoreCase("parametro")) {
-            if(procedencia.equalsIgnoreCase("parametro")){
+        if (existeVariableEntorno(nombre) == -1 || tipoSubprograma.equalsIgnoreCase("parametro")) {
+            if(tipoSubprograma.equalsIgnoreCase("parametro")){
                 Variable nuevaVar = new Variable(); //si es solo parametro para el invocador no importa el nombre
-                nuevaVar.setProcedencia(procedencia);
+                nuevaVar.setProcedencia(tipoSubprograma);
                 tablaSimbolos.add(nuevaVar);
                 estado = true;
             }
             else{ 
-                Variable nuevaVar = new Variable(nombre);
-                nuevaVar.setProcedencia(procedencia);
-                tablaSimbolos.add(nuevaVar);
-                estado = true;
-                nuevaVar.setDesplazamiento(cantVariables); //probar si funciona
+                if(tipoSubprograma.equalsIgnoreCase("funcion") || tipoSubprograma.equalsIgnoreCase("procedimiento")){
+                    Variable nuevaVar = new Variable(); //si es solo parametro para el invocador no importa el nombre
+                    nuevaVar.setProcedencia(tipoSubprograma);
+                    tablaSimbolos.add(nuevaVar);
+                    nuevaVar.setEtiqueta(etiqueta);
+                    
+                    if(tipoSubprograma.equalsIgnoreCase("funcion"))
+                        nuevaVar.setFuncion(true);
+                    
+                    else
+                        nuevaVar.setFuncion(false);
+                    
+                    estado = true;
+                }
+                else{
+                    Variable nuevaVar = new Variable(nombre);
+                    nuevaVar.setProcedencia(tipoSubprograma);
+                    tablaSimbolos.add(nuevaVar);
+                    estado = true;
+                    nuevaVar.setDesplazamiento(cantVariables); //probar si funciona
+                }
             }
             
         } else {
