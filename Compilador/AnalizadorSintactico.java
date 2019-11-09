@@ -241,7 +241,7 @@ public class AnalizadorSintactico {
         tipoAux = tipoDato();
         var = funcion.getTablaSimbolos().get(0);
         var.setTipo(tipoAux); //setea la variable de retorno con el mismo tipo de dato que la funcion
-        var.setDesplazamiento(0, nroParam);
+        var.setDesplazamiento(nroParam, 0);
         indInvocador = invocador.existeVariableEntorno(temp);
         invocador.getTablaSimbolos().get(indInvocador).setTipo(tipoAux);
         match(new Token("opPuntuacion", "puntoYComa"));
@@ -326,14 +326,20 @@ public class AnalizadorSintactico {
     }
 
     public void parametrosFormales(Entorno entorno, Entorno invocador) {
-        int cantParam = contarParametros(anidamiento, entorno);
-        nroParam = 0;
-        match(new Token("parentizacion", "parenAbre"));
+        int cantParam = 0;
+        Variable var;
+        nroParam = 1;
+         match(new Token("parentizacion", "parenAbre"));
         parametroFormalValor(entorno, invocador, cantParam);
         while (preanalisis.getValor().equalsIgnoreCase("tokenId")) {
             match(new Token("opPuntuacion", "puntoYComa"));
             parametroFormalValor(entorno, invocador,cantParam);
         }
+        for(int i=1;i<nroParam;i++){
+            var = entorno.obtenerVariableEntorno(i); 
+            var.setDesplazamiento(nroParam-1, i);
+        }
+        nroParam--;
         match(new Token("parentizacion", "parenCierra"));
     }
 
@@ -346,18 +352,17 @@ public class AnalizadorSintactico {
         match(new Token("identificador", "tokenId"));
         AnalizadorSemantico.insertarParam(invocador, temporal); //inserto en el PP como param
         AnalizadorSemantico.insertarVariableLocal(entorno, temporal); //inserto en el subprog como local
-        var = entorno.obtenerVariableEntorno(nroParam); //obtengo la variable
-        var.setDesplazamiento(nroParam, cantParam);   //calculo el desplazamiento
+        //var = entorno.obtenerVariableEntorno(nroParam); //obtengo la variable
+        //var.setDesplazamiento(nroParam, cantParam);   //calculo el desplazamiento
         
         while (preanalisis.getValor().equalsIgnoreCase("coma")) {
             match(new Token("opPuntuacion", "coma"));
             match(new Token("identificador", "tokenId"));
             AnalizadorSemantico.insertarParam(invocador, temporal); //inserto en el PP como param
             AnalizadorSemantico.insertarVariableLocal(entorno, temporal); //inserto en el subprog como local
-            var = entorno.obtenerVariableEntorno(nroParam); //obtengo la variable
-            var.setDesplazamiento(nroParam, cantParam);   //calculo el desplazamiento
-            
-            //ver como solucionamos el orden entre reserva de memoria y apilar parametros
+            //var = entorno.obtenerVariableEntorno(nroParam); //obtengo la variable
+            //var.setDesplazamiento(nroParam, cantParam);   //calculo el desplazamiento
+            nroParam++;
         }
         match(new Token("opPuntuacion", "dosPuntos"));
         tipoAux = tipoDato();
@@ -883,6 +888,10 @@ public class AnalizadorSintactico {
                 if (!pila.existeVarEnPila(temporal)) {
                     errorSemantico("La variable no existe en el programa");
                 } else {
+                    //apvl
+                    Variable var = pila.buscarAparicionVar(temporal);
+                    if(!var.isFuncion())
+                        mepa.apilarVar(var);
                     String tipo = pila.obtenerTipoVarEnPila(temporal);  //en la variable tipo guardo el tipo de dato del tokenId
                     TipoExp ladoIzq = new TipoExp(tipo);
                     td = ladoIzq;
@@ -980,6 +989,10 @@ public class AnalizadorSintactico {
                 if (!pila.existeVarEnPila(temporal)) {
                     errorSemantico("La variable no existe en el programa");
                 } else {
+                    //apvl
+                    Variable var = pila.buscarAparicionVar(temporal);
+                    if(!var.isFuncion())
+                        mepa.apilarVar(var);
                     String tipo = pila.obtenerTipoVarEnPila(temporal);  //en la variable tipo guardo el tipo de dato del tokenId
                     TipoExp ladoIzq = new TipoExp(tipo);
                     absId(ladoIzq);

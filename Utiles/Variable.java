@@ -79,9 +79,10 @@ public void setAnidamiento(int anidamiento) {
 	this.anidamiento = anidamiento;
 }
 
-public void setDesplazamiento(int i, int n) {
+public void setDesplazamiento(int n, int i) {
     
-    
+    //i empieza de 1, porque i=0 es retorno (0,1,2)
+    //n son los parametros (2)
     this.despl = -(n+3-i);
 }
 

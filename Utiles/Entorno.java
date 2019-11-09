@@ -117,7 +117,7 @@ public class Entorno {
                 nuevaVar.setProcedencia(tipoSubprograma);
                 tablaSimbolos.add(nuevaVar);
                 estado = true;
-            }
+        }
         else if (existeVariableEntorno(nombre) == -1){ 
                 if(tipoSubprograma.equalsIgnoreCase("funcion") || tipoSubprograma.equalsIgnoreCase("procedimiento")){
                     Variable nuevaVar = new Variable(nombre); //si es solo parametro para el invocador no importa el nombre
