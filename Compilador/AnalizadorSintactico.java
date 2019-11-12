@@ -186,6 +186,8 @@ public class AnalizadorSintactico {
         this.mepa.finDePrograma();
         this.salida.escribirFuente(this.mepa.getCadena());
         match(new Token("opPuntuacion", "punto"));
+        pila.desapilarEntorno();
+        this.anidamiento--;
          
     } // fin del metodo programaPrincipal
     
@@ -242,6 +244,7 @@ public class AnalizadorSintactico {
         var = funcion.getTablaSimbolos().get(0);
         var.setTipo(tipoAux); //setea la variable de retorno con el mismo tipo de dato que la funcion
         var.setDesplazamiento(nroParam, 0);
+        
         indInvocador = invocador.existeVariableEntorno(temp);
         invocador.getTablaSimbolos().get(indInvocador).setTipo(tipoAux);
         match(new Token("opPuntuacion", "puntoYComa"));
@@ -252,7 +255,7 @@ public class AnalizadorSintactico {
         if (preanalisis.getValor().equalsIgnoreCase("var")) {
             declaracionVariables(funcion);
         }
-
+        //mepa.apilarVar(var);
         while ((preanalisis.getValor().equalsIgnoreCase("function")) || (preanalisis.getValor().equalsIgnoreCase("procedure"))) {
             if (preanalisis.getValor().equalsIgnoreCase("function")) {
                 declaracionFuncion();
@@ -320,8 +323,10 @@ public class AnalizadorSintactico {
         bloque();
         match(new Token("palabraReservada", "end"));
         if(procedencia.equalsIgnoreCase("subprograma")){ //desapila solo si es end de subprograma
-            pila.desapilarEntorno();
-           this.anidamiento--;
+           if(anidamiento >0){
+                pila.desapilarEntorno();
+                this.anidamiento--;
+            }
         }
     }
 
@@ -351,7 +356,7 @@ public class AnalizadorSintactico {
         
         match(new Token("identificador", "tokenId"));
         AnalizadorSemantico.insertarParam(invocador, temporal); //inserto en el PP como param
-        AnalizadorSemantico.insertarVariableLocal(entorno, temporal); //inserto en el subprog como local
+        AnalizadorSemantico.insertarParam(entorno, temporal); //inserto en el subprog como local
         //var = entorno.obtenerVariableEntorno(nroParam); //obtengo la variable
         //var.setDesplazamiento(nroParam, cantParam);   //calculo el desplazamiento
         
@@ -359,7 +364,7 @@ public class AnalizadorSintactico {
             match(new Token("opPuntuacion", "coma"));
             match(new Token("identificador", "tokenId"));
             AnalizadorSemantico.insertarParam(invocador, temporal); //inserto en el PP como param
-            AnalizadorSemantico.insertarVariableLocal(entorno, temporal); //inserto en el subprog como local
+            AnalizadorSemantico.insertarParam(entorno, temporal); //inserto en el subprog como local
             //var = entorno.obtenerVariableEntorno(nroParam); //obtengo la variable
             //var.setDesplazamiento(nroParam, cantParam);   //calculo el desplazamiento
             nroParam++;
@@ -380,8 +385,16 @@ public class AnalizadorSintactico {
         int indice, cantParam;
         Entorno entornoActual = pila.obtenerTope();
         match(new Token("parentizacion", "parenAbre"));
+        
         indice = entornoActual.existeVariableEntorno(tokenIdLeido);
-        //System.out.println("ind "+indice+" nom: "+entornoActual.obtenerVariableEntorno(indice).getNombre());
+        while(entornoActual!=null && indice == -1){
+            entornoActual = entornoActual.getInvocador();
+            if(entornoActual != null)
+                indice = entornoActual.existeVariableEntorno(tokenIdLeido);
+            else 
+                Errores.errorSemantico("No es posible invocar el subprograma");
+        }
+        
         indice++; //me ubico en el indice del primer parametro
         cantParam = contarParametros(indice, entornoActual);
         //System.out.println(cantParam);
@@ -406,6 +419,8 @@ public class AnalizadorSintactico {
                     }
                 }
             }
+            else
+                Errores.errorSemantico("los tipos de dato de los parametros no coinciden");
             if(cantParam != 0){
                 Errores.errorSemantico("la cantidad de parametros en invocacion no coinciden con declaracion");
             }
@@ -991,7 +1006,7 @@ public class AnalizadorSintactico {
                 } else {
                     //apvl
                     Variable var = pila.buscarAparicionVar(temporal);
-                    if(!var.isFuncion())
+                    if(var.isFuncion() || var.getProcedencia().equalsIgnoreCase("variable"))
                         mepa.apilarVar(var);
                     String tipo = pila.obtenerTipoVarEnPila(temporal);  //en la variable tipo guardo el tipo de dato del tokenId
                     TipoExp ladoIzq = new TipoExp(tipo);

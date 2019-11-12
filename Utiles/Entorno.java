@@ -13,6 +13,7 @@ public class Entorno {
     private String etiqueta;
     private int anidamiento;
     private int desplazamiento;
+    private boolean funcion;
 
     //para el programa principal
     public Entorno() {
@@ -29,6 +30,7 @@ public class Entorno {
         this.cantVariables=0;
         this.anidamiento = anidamiento;
         desplazamiento=0;
+        funcion = tipo;
     }
 
     public void incCantVariables() {
@@ -113,9 +115,10 @@ public class Entorno {
 
         boolean estado = false;
         if(tipoSubprograma.equalsIgnoreCase("parametro")){
-                Variable nuevaVar = new Variable(); //si es solo parametro para el invocador no importa el nombre
+                Variable nuevaVar = new Variable(nombre); //si es solo parametro para el invocador no importa el nombre
                 nuevaVar.setProcedencia(tipoSubprograma);
                 tablaSimbolos.add(nuevaVar);
+                nuevaVar.setAnidamiento(this.anidamiento);
                 estado = true;
         }
         else if (existeVariableEntorno(nombre) == -1){ 
@@ -139,6 +142,7 @@ public class Entorno {
                     nuevaVar.setProcedencia(tipoSubprograma);
                     tablaSimbolos.add(nuevaVar);
                     estado = true;
+                    nuevaVar.setAnidamiento(this.anidamiento);
                     nuevaVar.setDesplazamiento(desplazamiento); 
                     desplazamiento++; //cada local que carga incrementa desplazamiento
                 }
