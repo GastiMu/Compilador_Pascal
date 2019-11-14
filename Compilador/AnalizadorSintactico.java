@@ -37,7 +37,7 @@ public class AnalizadorSintactico {
         preanalisis = lexico.retornarToken();
         pila = new PilaEntornos();
         this.mepa=new GeneradorMepa();
-        this.salida=new EscribirArchivo();
+        this.salida=new EscribirArchivo(archivo);
     
     }
 

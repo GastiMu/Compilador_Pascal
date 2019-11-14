@@ -27,8 +27,9 @@ public class EscribirArchivo {
         archivo = new File(nombre + ".mep");
     }*/
 
-    public EscribirArchivo() {
-        archivo = new File("mepa.mep");
+    public EscribirArchivo(String nombre) {
+        
+        archivo = new File(nombre.substring(0, nombre.length()-4)+".mep");
     }
     
     public void escribirFuente(String fuente) {
