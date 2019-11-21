@@ -11,6 +11,7 @@ package Utiles;
  */
 public class TipoExp {
 
+    private String nombre; //utilizado solo para variable de retorno de funcion
     private String tipoDato;
     private String operacion;
 
@@ -33,6 +34,14 @@ public class TipoExp {
 
     public void setTipoDato(String tipoDato) {
         this.tipoDato = tipoDato;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getNombre() {
+        return nombre;
     }
 
     public boolean verifCompatibilidadOperacion(String unaOperacion) {

@@ -9,6 +9,7 @@ public class Variable {
         private int despl;  // para parametros −(n + 3 − i)
         private String etiqueta;
         private boolean funcion;
+        private boolean valor;
 	
 public Variable(){
 	this.nombre = "";
@@ -21,10 +22,11 @@ public Variable(String nombre){
 	
 }
 
-public Variable(String nombre, int anidamiento, int desplazamiento){ //solo para read
+public Variable(String nombre, int anidamiento, int desplazamiento){
 	this.nombre = nombre;	
         this.anidamiento = anidamiento;
         this.despl = desplazamiento;
+        this.valor = false;
 }
 
     public void setFuncion(boolean funcion) {
@@ -33,6 +35,14 @@ public Variable(String nombre, int anidamiento, int desplazamiento){ //solo para
 
     public boolean isFuncion() {
         return funcion;
+    }
+
+    public void setValor(boolean valor) {
+        this.valor = valor;
+    }
+
+    public boolean getValor() {
+        return valor;
     }
 
     public void setEtiqueta(String etiqueta) {

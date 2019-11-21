@@ -62,6 +62,7 @@ public class AnalizadorLexico {
     
     public static Token verificar(String linea) {
         //es digito, letra o un caracter que no esta en el alfabeto de entrada
+        sacarEspaciosPrincipio(linea);
         Token token = new Token();
         String auxiliar,cadena = "";
         
@@ -80,11 +81,11 @@ public class AnalizadorLexico {
             token.setConstante(numb);
         } else {
 
-            if (Character.isLetter(linea.charAt(index))) {
+            if (Character.isLetter(linea.charAt(index)) || linea.charAt(index)=='_') {
                 cadena += linea.charAt(index);
                 //aca deberia ver el proximo caracter, pero ya se que es un tokenId(puede ser palabra reservada)
                 //mientras me queden simbolos en linea, y sean letras o num
-                while ((index < linea.length() - 1) && (Character.isLetter(linea.charAt(index + 1)) || Character.isDigit(linea.charAt(index + 1)))) {
+                while ((index < linea.length() - 1) && (Character.isLetter(linea.charAt(index + 1)) || Character.isDigit(linea.charAt(index + 1)) || linea.charAt(index + 1)=='_')) {
                     index++;
                     cadena += linea.charAt(index);
                 }
@@ -335,5 +336,10 @@ public static int LocalizarProxCaracter() {
     	
     }  // fin de macheo de tokens
 
+   private static void sacarEspaciosPrincipio(String linea){
+       //actualiza el index hasta el primer caracter no vacio
+       while(linea.charAt(index)==' ')
+           index++;
+   }
 }  // fin de la clase
 

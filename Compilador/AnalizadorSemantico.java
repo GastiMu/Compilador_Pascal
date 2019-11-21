@@ -39,6 +39,10 @@ public class AnalizadorSemantico {
         entorno.agregarVariable(nombreVar," " ,"parametro"); 
     }
     
+    public static void insertarParamHijo(Entorno entorno, String nombreVar) {
+        entorno.agregarVariable(nombreVar," " ,"parametroHijo"); 
+    }
+    
     public static void insertarSubprograma(Entorno entorno, String etiqueta,String nombreVar, String tipoSubprograma) {
         entorno.agregarVariable(nombreVar, etiqueta, tipoSubprograma); 
     }

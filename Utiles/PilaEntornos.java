@@ -88,6 +88,13 @@ public class PilaEntornos {
                 i++;
                 aux = aux.getInvocador();
             }
+            if(indice != -1){
+                var = aux.obtenerVariableEntorno(indice);
+                if(var.getProcedencia().equalsIgnoreCase("parametroHijo")){
+                    indice = -1; //no esta en el entorno realmente
+                    i++;
+                }
+            }
         }
         if (indice != -1) {
             var = aux.obtenerVariableEntorno(indice);

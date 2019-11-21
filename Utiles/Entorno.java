@@ -1,5 +1,6 @@
 package Utiles;
 
+import Compilador.Errores;
 import static Compilador.Errores.errorSemantico;
 import java.util.ArrayList;
 
@@ -114,16 +115,30 @@ public class Entorno {
     public boolean agregarVariable(String nombre, String etiqueta, String tipoSubprograma) {
 
         boolean estado = false;
-        if(tipoSubprograma.equalsIgnoreCase("parametro")){
-                Variable nuevaVar = new Variable(nombre); //si es solo parametro para el invocador no importa el nombre
+        
+        if(tipoSubprograma.equalsIgnoreCase("parametroHijo")){
+                Variable nuevaVar = new Variable(nombre); 
                 nuevaVar.setProcedencia(tipoSubprograma);
                 tablaSimbolos.add(nuevaVar);
-                nuevaVar.setAnidamiento(this.anidamiento);
                 estado = true;
         }
-        else if (existeVariableEntorno(nombre) == -1){ 
+        else{
+            if(tipoSubprograma.equalsIgnoreCase("parametro")){
+                Variable nuevaVar = new Variable(nombre); //si es solo parametro para el invocador no importa el nombre
+                nuevaVar.setProcedencia(tipoSubprograma);
+                if(existeVariableEntorno(nombre)==-1){
+                    tablaSimbolos.add(nuevaVar);
+                    nuevaVar.setAnidamiento(this.anidamiento);
+                    estado = true;
+                }
+                else{
+                    Errores.errorSemantico("La variable '"+nombre+"' ya existe en el entorno "+this.nombreEntorno);
+                }
+            }
+            else if (existeVariableEntorno(nombre) == -1){ 
                 if(tipoSubprograma.equalsIgnoreCase("funcion") || tipoSubprograma.equalsIgnoreCase("procedimiento")){
                     Variable nuevaVar = new Variable(nombre); //si es solo parametro para el invocador no importa el nombre
+                    nuevaVar.setValor(false); //inicialmente el retorno no tiene valor asignado
                     nuevaVar.setProcedencia(tipoSubprograma);
                     tablaSimbolos.add(nuevaVar);
                     nuevaVar.setEtiqueta(etiqueta);
@@ -136,20 +151,21 @@ public class Entorno {
                         nuevaVar.setFuncion(false);
                     
                     estado = true;
-                    }
+                }
                 else{
                     Variable nuevaVar = new Variable(nombre);
                     nuevaVar.setProcedencia(tipoSubprograma);
-                    tablaSimbolos.add(nuevaVar);
-                    estado = true;
-                    nuevaVar.setAnidamiento(this.anidamiento);
-                    nuevaVar.setDesplazamiento(desplazamiento); 
-                    desplazamiento++; //cada local que carga incrementa desplazamiento
-                }
+                        tablaSimbolos.add(nuevaVar);
+                        estado = true;
+                        nuevaVar.setAnidamiento(this.anidamiento);
+                        nuevaVar.setDesplazamiento(desplazamiento); 
+                        desplazamiento++; //cada local que carga incrementa desplazamiento
+                    }
             }
             else {
-                errorSemantico("Error, la variable " + nombre + " ya existe en el entorno");
+                errorSemantico("La variable '" + nombre + "' ya existe en el entorno "+this.nombreEntorno);
             }
+        }
 
         return estado;
     }

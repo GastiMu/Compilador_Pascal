@@ -265,6 +265,7 @@ public class AnalizadorSintactico {
         }
         cuerpoSubprograma("subprograma");
         
+        
         if(funcion.getCantVariables()!=0)
             mepa.liberarMemoria(funcion.getCantVariables());
         mepa.finProcedimiento(anidamientoEntorno, nroParam);
@@ -321,7 +322,11 @@ public class AnalizadorSintactico {
 
         match(new Token("palabraReservada", "begin"));
         bloque();
+        //si existe la variable de retorno, es una variable de tipo funcion y tiene un valor asignado
+        if(pila.obtenerTope().existeVariableEntorno(pila.obtenerTope().getNombreEntorno())!=-1 && pila.buscarAparicionVar(pila.obtenerTope().getNombreEntorno()).isFuncion() && (!pila.buscarAparicionVar(pila.obtenerTope().getNombreEntorno()).getValor()))
+            Errores.errorSemantico("A la variable de retorno nunca se le asigno un valor");
         match(new Token("palabraReservada", "end"));
+        
         if(procedencia.equalsIgnoreCase("subprograma")){ //desapila solo si es end de subprograma
            if(anidamiento >0){
                 pila.desapilarEntorno();
@@ -336,7 +341,7 @@ public class AnalizadorSintactico {
         nroParam = 1;
          match(new Token("parentizacion", "parenAbre"));
         parametroFormalValor(entorno, invocador, cantParam);
-        while (preanalisis.getValor().equalsIgnoreCase("tokenId")) {
+        while (preanalisis.getValor().equalsIgnoreCase("puntoYComa")) {
             match(new Token("opPuntuacion", "puntoYComa"));
             parametroFormalValor(entorno, invocador,cantParam);
         }
@@ -355,7 +360,7 @@ public class AnalizadorSintactico {
         //nroParam indica el indice del parametro en la declaracion
         
         match(new Token("identificador", "tokenId"));
-        AnalizadorSemantico.insertarParam(invocador, temporal); //inserto en el PP como param
+        AnalizadorSemantico.insertarParamHijo(invocador, temporal); //inserto en el PP como param
         AnalizadorSemantico.insertarParam(entorno, temporal); //inserto en el subprog como local
         //var = entorno.obtenerVariableEntorno(nroParam); //obtengo la variable
         //var.setDesplazamiento(nroParam, cantParam);   //calculo el desplazamiento
@@ -363,7 +368,7 @@ public class AnalizadorSintactico {
         while (preanalisis.getValor().equalsIgnoreCase("coma")) {
             match(new Token("opPuntuacion", "coma"));
             match(new Token("identificador", "tokenId"));
-            AnalizadorSemantico.insertarParam(invocador, temporal); //inserto en el PP como param
+            AnalizadorSemantico.insertarParamHijo(invocador, temporal); //inserto en el PP como param
             AnalizadorSemantico.insertarParam(entorno, temporal); //inserto en el subprog como local
             //var = entorno.obtenerVariableEntorno(nroParam); //obtengo la variable
             //var.setDesplazamiento(nroParam, cantParam);   //calculo el desplazamiento
@@ -399,15 +404,15 @@ public class AnalizadorSintactico {
         cantParam = contarParametros(indice, entornoActual);
         //System.out.println(cantParam);
         var = entornoActual.obtenerVariableEntorno(indice); //obtengo el primer parametro (y verifico que lo sea)
-        if(var.esParametro()){
+        if(var.getProcedencia().equalsIgnoreCase("parametroHijo")){
             cantParam--;
             tipo = expresion().getTipoDato();   //obtengo el tipo de dato de la expresion
             if(tipo.equalsIgnoreCase(var.getTipo())){   //comparo que coincidan los tipos
-                while (cantParam != 0 && preanalisis.getValor().equalsIgnoreCase("coma") && entornoActual.obtenerVariableEntorno(indice+1).esParametro()) {   //mientras que siga una coma y en la tabla siga otro parametro
+                while (cantParam != 0 && preanalisis.getValor().equalsIgnoreCase("coma") && entornoActual.obtenerVariableEntorno(indice+1).getProcedencia().equalsIgnoreCase("parametroHijo")) {   //mientras que siga una coma y en la tabla siga otro parametro
                     match(new Token("opPuntuacion", "coma"));
                     indice++;
                     var = entornoActual.obtenerVariableEntorno(indice);
-                    if(var.esParametro()){
+                    if(var.getProcedencia().equalsIgnoreCase("parametroHijo")){
                         cantParam--;
                         tipo = expresion().getTipoDato();
                         if(!tipo.equalsIgnoreCase(var.getTipo())){
@@ -446,9 +451,10 @@ public class AnalizadorSintactico {
             case "write":
             	
                 match(new Token("palabraReservada", "write"));
-                this.mepa.imprimir();
+                
                 match(new Token("parentizacion", "parenAbre"));
                 expresion();
+                this.mepa.imprimir();
                 match(new Token("parentizacion", "parenCierra"));
                 break;
 
@@ -492,6 +498,7 @@ public class AnalizadorSintactico {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
                     TipoExp ladoDer = expresion1(td);
+                    mepa.operaciones("disjLogica");
                     compatible = td.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
@@ -529,6 +536,7 @@ public class AnalizadorSintactico {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
                     TipoExp ladoDer = expresion2(tipoD);
+                    mepa.operaciones("conjLogica");
                     compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
@@ -552,6 +560,7 @@ public class AnalizadorSintactico {
             match(new Token("palabraReservada", "not"));
             
             TipoExp ladoDer = expresion2(td);
+            mepa.operaciones("negacion");
             compatible = ladoDer.verifCompatibilidadOperacion("not");
             if (!compatible) {
                 errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
@@ -591,6 +600,7 @@ public class AnalizadorSintactico {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
                     TipoExp ladoDer = auxiliarComparacion(tipoD);
+                    mepa.operaciones("compIgual");
                     compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
@@ -608,6 +618,7 @@ public class AnalizadorSintactico {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
                     TipoExp ladoDer = auxiliarComparacion(tipoD);
+                    mepa.operaciones("compDesigual");
                     compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
@@ -625,6 +636,7 @@ public class AnalizadorSintactico {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
                     TipoExp ladoDer = auxiliarComparacion(tipoD);
+                    mepa.operaciones("compMenor");
                     compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
@@ -642,6 +654,7 @@ public class AnalizadorSintactico {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
                     TipoExp ladoDer = auxiliarComparacion(tipoD);
+                    mepa.operaciones("compMayor");
                     compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
@@ -659,6 +672,7 @@ public class AnalizadorSintactico {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
                     TipoExp ladoDer = auxiliarComparacion(tipoD);
+                    mepa.operaciones("compMenorIgual");
                     compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
@@ -676,6 +690,7 @@ public class AnalizadorSintactico {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
                     TipoExp ladoDer = auxiliarComparacion(tipoD);
+                    mepa.operaciones("compMayorIgual");
                     compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
@@ -719,6 +734,7 @@ public class AnalizadorSintactico {
                 errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
             } else {
                 TipoExp ladoDer = auxiliarSumaRest(tipoD);
+                mepa.operaciones("sumar");
                 compatible = tipoD.compararAmbosLados(ladoDer);
                 if (!compatible) {
                     errorSemantico("Error, no son compatibles los tipos de dato.");
@@ -736,6 +752,7 @@ public class AnalizadorSintactico {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
                     TipoExp ladoDer = auxiliarSumaRest(tipoD);
+                    mepa.operaciones("restar");
                     compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
@@ -781,6 +798,7 @@ public class AnalizadorSintactico {
                 errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
             } else {
                 TipoExp ladoDer = auxiliarProdDiv(tipoD);
+                mepa.operaciones("multiplicar");
                 compatible = tipoD.compararAmbosLados(ladoDer);
                 if (!compatible) {
                     errorSemantico("Error, no son compatibles los tipos de dato.");
@@ -797,6 +815,7 @@ public class AnalizadorSintactico {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
                     TipoExp ladoDer = auxiliarSumaRest(tipoD);
+                    mepa.operaciones("dividir");
                     compatible = tipoD.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
@@ -837,6 +856,7 @@ public class AnalizadorSintactico {
                 errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
             } else {
                 TipoExp ladoDer = expresion10();
+                mepa.operaciones("sumar");
                 compatible = ladoIzq.compararAmbosLados(ladoDer);
                 if (!compatible) {
                     errorSemantico("Error, no son compatibles los tipos de dato.");
@@ -853,6 +873,7 @@ public class AnalizadorSintactico {
                     errorSemantico("Error, no son compatibles la operacion con el tipo de dato.");
                 } else {
                     TipoExp ladoDer = expresion10();
+                    mepa.operaciones("restar");
                     compatible = ladoIzq.compararAmbosLados(ladoDer);
                     if (!compatible) {
                         errorSemantico("Error, no son compatibles los tipos de dato.");
@@ -905,11 +926,12 @@ public class AnalizadorSintactico {
                 } else {
                     //apvl
                     Variable var = pila.buscarAparicionVar(temporal);
-                    if(!var.isFuncion())
-                        mepa.apilarVar(var);
+                    
                     String tipo = pila.obtenerTipoVarEnPila(temporal);  //en la variable tipo guardo el tipo de dato del tokenId
                     TipoExp ladoIzq = new TipoExp(tipo);
                     td = ladoIzq;
+                    if(!var.isFuncion())
+                        mepa.apilarVar(var);
                     expresionFinalAux();
                 }break;
 
@@ -1006,11 +1028,15 @@ public class AnalizadorSintactico {
                 } else {
                     //apvl
                     Variable var = pila.buscarAparicionVar(temporal);
-                    if(var.isFuncion() || var.getProcedencia().equalsIgnoreCase("variable"))
-                        mepa.apilarVar(var);
+                    /*if(var.getNombre().equalsIgnoreCase(""))
+                        errorSemantico("La variable no existe en el programa");
+                    */
                     String tipo = pila.obtenerTipoVarEnPila(temporal);  //en la variable tipo guardo el tipo de dato del tokenId
                     TipoExp ladoIzq = new TipoExp(tipo);
+                    ladoIzq.setNombre(tokenIdLeido);
                     absId(ladoIzq);
+                    if(var.isFuncion() || var.getProcedencia().equalsIgnoreCase("variable"))
+                        mepa.apilarVar(var);
                 }
 
                 break;
@@ -1040,6 +1066,10 @@ public class AnalizadorSintactico {
     public void absId(TipoExp ladoIzq) {
         if (preanalisis.getValor().equalsIgnoreCase("asignacion")) {
             sentenciaAsignacion(ladoIzq);
+            //obtengo variable a la que acabo de asignar y verifico si asigne algo al retorno
+            if(pila.buscarAparicionVar(ladoIzq.getNombre()).isFuncion() && pila.buscarAparicionVar(ladoIzq.getNombre()).getNombre().equalsIgnoreCase(pila.obtenerTope().getNombreEntorno()))
+                pila.buscarAparicionVar(ladoIzq.getNombre()).setValor(true);
+            
         } else {
             if (preanalisis.getValor().equalsIgnoreCase("parenAbre")) {
                 
@@ -1106,7 +1136,7 @@ public class AnalizadorSintactico {
         // mientras quede tabla por recorrer y sigan habiendo parametros consecutivos, incremento
         int cant = 0;
         
-        while(indice < ent.getTablaSimbolos().size() && ent.getTablaSimbolos().get(indice).esParametro()){
+        while(indice < ent.getTablaSimbolos().size() && ent.getTablaSimbolos().get(indice).getProcedencia().equalsIgnoreCase("parametroHijo")){
             cant ++;
             indice++;
         }

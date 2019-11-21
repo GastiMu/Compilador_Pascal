@@ -43,7 +43,7 @@ public class GeneradorMepa {
 
 //Agregar anidamiento y desplazamiento a las variables
     public void apilarVar(Variable var) {
-        cadena += "APVL " + var.getAnidamiento() + " " + var.getDesplazamiento() + " \n";
+        cadena += "APVL " + var.getAnidamiento() + "," + var.getDesplazamiento() + " \n";
     }
 
     public void apilarConstante(int i) {
@@ -81,7 +81,7 @@ public class GeneradorMepa {
     }
 
     public void finProcedimiento(int anidamiento, int cantParametros) {
-        cadena += "RTPR " + anidamiento + " " + cantParametros + " \n";
+        cadena += "RTPR " + anidamiento + "," + cantParametros + " \n";
     }
 
     public void liberarMemoria(int param) {
@@ -90,7 +90,7 @@ public class GeneradorMepa {
     }
 
     public void asignarVariable(Variable var) {
-        cadena += "ALVL " + var.getAnidamiento() + " " + var.getDesplazamiento() + " \n";
+        cadena += "ALVL " + var.getAnidamiento() + "," + var.getDesplazamiento() + " \n";
     }
 
     public void llamarProcedimiento(String etiqueta) {
@@ -129,18 +129,6 @@ public class GeneradorMepa {
             case "compMayorIgual":
                 this.cadena = this.cadena + "CMYI" + "\n";break;
         }
-    }
-
-    public void desvioSiempre() {
-
-        this.cadena = this.cadena + "DSVS " + this.numEtiqueta + "\n";
-        this.numEtiqueta++;
-    }
-
-    public void desvioFalso() {
-
-        this.cadena = this.cadena + "DSVF " + this.numEtiqueta + "\n";
-        this.numEtiqueta++;
     }
 
 }  // fin de la clase
