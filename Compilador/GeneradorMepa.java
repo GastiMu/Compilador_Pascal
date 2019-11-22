@@ -19,7 +19,7 @@ public class GeneradorMepa {
     public GeneradorMepa() {
 
         this.cadena = " ";
-        this.numEtiqueta = 1;
+        this.numEtiqueta = 0;
 
     }
 

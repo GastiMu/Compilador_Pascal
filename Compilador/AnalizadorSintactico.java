@@ -287,7 +287,8 @@ public class AnalizadorSintactico {
         temp = temporal;
         String etiqueta = mepa.generarEtiqueta();
         
-        AnalizadorSemantico.insertarSubprograma(procedimiento,"", temp, "procedimiento");
+        invocador.setHijo(temp);
+        AnalizadorSemantico.insertarSubprograma(procedimiento,"p", temp, "procedimiento");
         AnalizadorSemantico.insertarSubprograma(invocador, etiqueta, temp, "procedimiento");
         
         if (preanalisis.getValor().equalsIgnoreCase("parenAbre")) {
@@ -991,12 +992,11 @@ public class AnalizadorSintactico {
             String etiqueta = mepa.generarEtiqueta();
             mepa.saltarSiFalso(etiqueta);
             sentencias();
+            mepa.destinoDeSalto(etiqueta);
             if (preanalisis.getValor().equalsIgnoreCase("else")) {
                 String etiquetaElse = mepa.generarEtiqueta();
                 mepa.saltarSiempre(etiquetaElse);
                 match(new Token("palabraReservada", "else"));
-                mepa.destinoDeSalto(etiqueta);
-                
                 sentencias();
                 mepa.destinoDeSalto(etiquetaElse);
             }
@@ -1035,8 +1035,8 @@ public class AnalizadorSintactico {
                     TipoExp ladoIzq = new TipoExp(tipo);
                     ladoIzq.setNombre(tokenIdLeido);
                     absId(ladoIzq);
-                    if(var.isFuncion() || var.getProcedencia().equalsIgnoreCase("variable"))
-                        mepa.apilarVar(var);
+                    /*if(var.isFuncion())
+                        mepa.apilarVar(var);*/
                 }
 
                 break;

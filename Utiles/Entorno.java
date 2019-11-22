@@ -15,6 +15,7 @@ public class Entorno {
     private int anidamiento;
     private int desplazamiento;
     private boolean funcion;
+    private String hijo = "";
 
     //para el programa principal
     public Entorno() {
@@ -48,6 +49,14 @@ public class Entorno {
 
     public int getCantVariables() {
         return cantVariables;
+    }
+    
+    public void setHijo(String hijo) {
+        this.hijo = hijo;
+    }
+
+    public String getHijo() {
+        return hijo;
     }
     
     public void setInvocador(Entorno invocador) {
@@ -135,7 +144,8 @@ public class Entorno {
                     Errores.errorSemantico("La variable '"+nombre+"' ya existe en el entorno "+this.nombreEntorno);
                 }
             }
-            else if (existeVariableEntorno(nombre) == -1){ 
+            // no existe la variable ||  estoy en el subprograma y el padre tiene el mismo nombre
+            else if ((existeVariableEntorno(nombre) == -1) || (etiqueta.charAt(0)=='l' && nombre.equalsIgnoreCase(this.hijo))){ 
                 if(tipoSubprograma.equalsIgnoreCase("funcion") || tipoSubprograma.equalsIgnoreCase("procedimiento")){
                     Variable nuevaVar = new Variable(nombre); //si es solo parametro para el invocador no importa el nombre
                     nuevaVar.setValor(false); //inicialmente el retorno no tiene valor asignado
