@@ -390,6 +390,9 @@ public class AnalizadorSintactico {
         String tipo;
         int indice, cantParam;
         Entorno entornoActual = pila.obtenerTope();
+        if(tokenIdLeido.equals(entornoActual.getNombreEntorno())){ //hay recursividad
+            entornoActual.setRecursivo(true);
+        }
         match(new Token("parentizacion", "parenAbre"));
         
         indice = entornoActual.existeVariableEntorno(tokenIdLeido);
@@ -405,7 +408,7 @@ public class AnalizadorSintactico {
         cantParam = contarParametros(indice, entornoActual);
         //System.out.println(cantParam);
         var = entornoActual.obtenerVariableEntorno(indice); //obtengo el primer parametro (y verifico que lo sea)
-        if(var.getProcedencia().equalsIgnoreCase("parametroHijo")){
+        if(var.getProcedencia().equalsIgnoreCase("parametroHijo") || (var.getProcedencia().equalsIgnoreCase("parametro") && entornoActual.getRecursivo())){
             cantParam--;
             tipo = expresion().getTipoDato();   //obtengo el tipo de dato de la expresion
             if(tipo.equalsIgnoreCase(var.getTipo())){   //comparo que coincidan los tipos
@@ -938,11 +941,13 @@ public class AnalizadorSintactico {
 
             case "true":
                 match(new Token("palabraReservada", "true"));
+                mepa.apilarConstante(1);
                 td.setTipoDato("boolean");
                 break;
 
             case "false":
                 match(new Token("palabraReservada", "false"));
+                mepa.apilarConstante(0);
                 td.setTipoDato("boolean");
                 break;
 
@@ -990,12 +995,12 @@ public class AnalizadorSintactico {
         else{
             match(new Token("palabraReservada", "then"));
             String etiqueta = mepa.generarEtiqueta();
+            String etiquetaElse = mepa.generarEtiqueta();
             mepa.saltarSiFalso(etiqueta);
             sentencias();
+            mepa.saltarSiempre(etiquetaElse);
             mepa.destinoDeSalto(etiqueta);
             if (preanalisis.getValor().equalsIgnoreCase("else")) {
-                String etiquetaElse = mepa.generarEtiqueta();
-                mepa.saltarSiempre(etiquetaElse);
                 match(new Token("palabraReservada", "else"));
                 sentencias();
                 mepa.destinoDeSalto(etiquetaElse);
@@ -1136,7 +1141,8 @@ public class AnalizadorSintactico {
         // mientras quede tabla por recorrer y sigan habiendo parametros consecutivos, incremento
         int cant = 0;
         
-        while(indice < ent.getTablaSimbolos().size() && ent.getTablaSimbolos().get(indice).getProcedencia().equalsIgnoreCase("parametroHijo")){
+        //indice este en el rango y solo sean parametros del hijo, o en caso recursivo pueden ser parametros del padre
+        while(indice < ent.getTablaSimbolos().size() && (ent.getTablaSimbolos().get(indice).getProcedencia().equalsIgnoreCase("parametroHijo") || (ent.getTablaSimbolos().get(indice).getProcedencia().equalsIgnoreCase("parametro") && ent.getRecursivo()))){
             cant ++;
             indice++;
         }

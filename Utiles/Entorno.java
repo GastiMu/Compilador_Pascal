@@ -16,6 +16,7 @@ public class Entorno {
     private int desplazamiento;
     private boolean funcion;
     private String hijo = "";
+    private boolean recursivo=false;
 
     //para el programa principal
     public Entorno() {
@@ -47,6 +48,14 @@ public class Entorno {
         this.etiqueta = etiqueta;
     }
 
+    public void setRecursivo(boolean rec) {
+        this.recursivo = rec;
+    }
+    
+    public boolean getRecursivo() {
+        return recursivo;
+    }
+    
     public int getCantVariables() {
         return cantVariables;
     }
